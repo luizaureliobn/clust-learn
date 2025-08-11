@@ -25,6 +25,14 @@ num_vars = ['AGE', 'PAREDINT', 'BMMJ1',
             'SOCONPA']
 cat_vars = ['ST004D01T', 'IMMIG', 'REPEAT']
 
+# Biblioteca para manipulação de diretórios
+import sys
+from pathlib import Path
+
+# Adiciona o diretório raiz do projeto ao PATH
+project_root = Path(__file__).resolve().parent.parent  # sobe 2 níveis
+sys.path.insert(0, str(project_root))
+
 # Load data
 df = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'pisa_spain_sample_v2.csv'))
 

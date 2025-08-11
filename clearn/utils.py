@@ -8,6 +8,21 @@ import pingouin as pg
 from matplotlib.ticker import MaxNLocator
 from sklearn.metrics import mutual_info_score
 
+# Criar diretórios automaticamente (Luiz)
+import os
+import matplotlib.pyplot as plt
+
+def savefig(fig, name, formats, **kwargs):
+    # Caminho do diretório
+    dir_path = "img"
+    
+    # Cria o diretório se não existir
+    os.makedirs(dir_path, exist_ok=True)
+    
+    for fmt in formats:
+        filename = f"{dir_path}/{name}.{fmt}"
+        fig.savefig(filename, format=fmt, **kwargs)
+        print(f"Saved: {filename}")
 
 def compute_high_corr_pairs(df, corr_thres=0.7, method='pearson'):
     """
