@@ -26,11 +26,16 @@ num_vars = ['AGE', 'PAREDINT', 'BMMJ1',
 cat_vars = ['ST004D01T', 'IMMIG', 'REPEAT']
 
 # Load data
-df = pd.read_csv('data/pisa_spain_sample_v2.csv')
+df = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'pisa_spain_sample_v2.csv'))
 
 # DATA PREPROCESSING
 print('--- DATA PREPROCESSING ---')
-from clearn.data_preprocessing import *
+from clearn.data_preprocessing import (
+    missing_values_heatmap,
+    impute_missing_values,
+    plot_imputation_distribution_assessment,
+    remove_outliers
+)
 
 # Computre missing values
 n_missing = df.isnull().sum().sum()
