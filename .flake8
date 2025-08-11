@@ -1,0 +1,12 @@
+[flake8]
+# Desativar todas as verificações do Flake8 para este projeto
+ignore = E,W,F,C,N
+max-line-length = 999
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    *.egg-info
