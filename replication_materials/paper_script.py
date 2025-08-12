@@ -102,7 +102,7 @@ dr.plot_cat_main_contributor_distribution(dim_idx=0, output_path=os.path.join(im
 
 # Plot explained variance
 dr.plot_num_explained_variance(0.5, plots=['cumulative', 'normalized'],
-                               output_path=os.path.join(img_dir, "dim_red_explained_variance.jpg"))
+                            output_path=os.path.join(img_dir, "dim_red_explained_variance.jpg"))
 
 # CLUSTERING
 print('--- CLUSTERING ---')
