@@ -13,14 +13,31 @@ from .utils import *
 from ..utils import get_axis, plot_optimal_normalized_elbow, savefig
 
 
-sns.set_style('whitegrid')
+sns.set_style("whitegrid")
 
-CARTO_COLORS = ['#7F3C8D', '#11A579', '#3969AC', '#F2B701', '#E73F74', '#80BA5A', '#E68310',  '#008695', '#CF1C90',
-                '#f97b72', '#4b4b8f', '#A5AA99']
+CARTO_COLORS = [
+    "#7F3C8D",
+    "#11A579",
+    "#3969AC",
+    "#F2B701",
+    "#E73F74",
+    "#80BA5A",
+    "#E68310",
+    "#008695",
+    "#CF1C90",
+    "#f97b72",
+    "#4b4b8f",
+    "#A5AA99",
+]
 
 
-def plot_score_comparison(scores, cluster_range, metric_name='Weighted sum of squared distances', output_path=None,
-                          savefig_kws=None):
+def plot_score_comparison(
+    scores,
+    cluster_range,
+    metric_name="Weighted sum of squared distances",
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots the comparison in performance between the different clustering algorithms.
 
@@ -44,17 +61,25 @@ def plot_score_comparison(scores, cluster_range, metric_name='Weighted sum of sq
         plt.plot(scores[algorithm], label=algorithm, color=CARTO_COLORS[i])
         i += 1
 
-    plt.xlabel('Number of clusters', fontsize=12, labelpad=15)
+    plt.xlabel("Number of clusters", fontsize=12, labelpad=15)
     plt.ylabel(metric_name, fontsize=12, labelpad=15)
     plt.xticks(ticks=range(len(list(scores.values())[0])), labels=range(*cluster_range))
     plt.tight_layout()
-    plt.legend(fontsize=12, title='Algorithm', title_fontsize=13, labelspacing=0.5)
+    plt.legend(fontsize=12, title="Algorithm", title_fontsize=13, labelspacing=0.5)
 
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_optimal_components_normalized(scores, max_clusters, metric_name, first_score=0, curve='convex',
-                                       direction='decreasing', output_path=None, savefig_kws=None):
+def plot_optimal_components_normalized(
+    scores,
+    max_clusters,
+    metric_name,
+    first_score=0,
+    curve="convex",
+    direction="decreasing",
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots the normalized curve used for computing the optimal number of clusters.
 
@@ -79,10 +104,20 @@ def plot_optimal_components_normalized(scores, max_clusters, metric_name, first_
         Save figure options.
     """
     fig, ax = plt.subplots(figsize=(8, 5))
-    kl = KneeLocator(x=range(first_score + 1, max_clusters + 1), y=scores[first_score:], curve=curve,
-                     direction=direction)
-    plot_optimal_normalized_elbow(scores, kl, ax, optimal_label='Optimal number of clusters',
-                                  xlabel='Number of clusters', ylabel=f'Normalized {metric_name}')
+    kl = KneeLocator(
+        x=range(first_score + 1, max_clusters + 1),
+        y=scores[first_score:],
+        curve=curve,
+        direction=direction,
+    )
+    plot_optimal_normalized_elbow(
+        scores,
+        kl,
+        ax,
+        optimal_label="Optimal number of clusters",
+        xlabel="Number of clusters",
+        ylabel=f"Normalized {metric_name}",
+    )
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
@@ -101,24 +136,48 @@ def plot_clustercount(df, weights=None, output_path=None, savefig_kws=None):
     savefig_kws : dict, default=None
         Save figure options.
     """
-    plt.figure(figsize=(df['cluster_cat'].nunique(), 5))
+    plt.figure(figsize=(df["cluster_cat"].nunique(), 5))
     if weights is None:
-        sns.countplot(x='cluster_cat', data=df, color='#332288', alpha=0.9, order=np.sort(df['cluster_cat'].unique()))
+        sns.countplot(
+            x="cluster_cat",
+            data=df,
+            color="#332288",
+            alpha=0.9,
+            order=np.sort(df["cluster_cat"].unique()),
+        )
     else:
-        bar_df = pd.concat([df['cluster_cat'], pd.Series(weights, name='weights')], axis=1).groupby(
-            'cluster_cat').agg({'weights': 'sum'}).reset_index()
-        sns.barplot(x='cluster_cat', y='weights', data=bar_df, color='#332288', alpha=0.9,
-                    order=np.sort(df['cluster_cat'].unique()))
+        bar_df = (
+            pd.concat([df["cluster_cat"], pd.Series(weights, name="weights")], axis=1)
+            .groupby("cluster_cat")
+            .agg({"weights": "sum"})
+            .reset_index()
+        )
+        sns.barplot(
+            x="cluster_cat",
+            y="weights",
+            data=bar_df,
+            color="#332288",
+            alpha=0.9,
+            order=np.sort(df["cluster_cat"].unique()),
+        )
     # plt.xticks(rotation=30)
-    plt.ylabel('count', fontsize=12, labelpad=10)
-    plt.xlabel('clusters', fontsize=12, labelpad=10)
+    plt.ylabel("count", fontsize=12, labelpad=10)
+    plt.xlabel("clusters", fontsize=12, labelpad=10)
     plt.tight_layout(pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_cluster_means_to_global_means_comparison(df, dimensions, weights=None, xlabel=None, ylabel=None,
-                                                  levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
-                                                  data_standardized=False, output_path=None, savefig_kws=None):
+def plot_cluster_means_to_global_means_comparison(
+    df,
+    dimensions,
+    weights=None,
+    xlabel=None,
+    ylabel=None,
+    levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
+    data_standardized=False,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots the normalized curve used for computing the optimal number of clusters.
 
@@ -145,29 +204,47 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, weights=None, 
     savefig_kws : dict, default=None
         Save figure options.
     """
-    df_diff = compare_cluster_means_to_global_means(df, dimensions, weights, data_standardized=data_standardized)
-    colors = sns.color_palette("BrBG", n_colors=len(levels)+1)
+    df_diff = compare_cluster_means_to_global_means(
+        df, dimensions, weights, data_standardized=data_standardized
+    )
+    colors = sns.color_palette("BrBG", n_colors=len(levels) + 1)
     cmap, norm = matplotlib.colors.from_levels_and_colors(levels, colors, extend="both")
     width = min(len(dimensions), 20)
-    height = min(df['cluster'].nunique(), 8)
+    height = min(df["cluster"].nunique(), 8)
     fig, ax = plt.subplots(figsize=(width, height))
     im = ax.imshow(df_diff[dimensions].values, cmap=cmap, norm=norm)
-    ax.set(xticks=range(len(dimensions)), yticks=range(df_diff.shape[0]),
-           xticklabels=list(map(str.upper, dimensions)), yticklabels=df_diff['cluster'])
-    ax.tick_params(axis='x', rotation=40, labelsize=10)
-    ax.tick_params(axis='y', labelsize=10)
-    ax.set_xlabel('' if xlabel is None else xlabel, fontsize=12, weight='bold', labelpad=15)
-    ax.set_ylabel('' if ylabel is None else ylabel, fontsize=12, weight='bold', labelpad=15)
-    for i in range(len(df_diff['cluster'].unique())):
+    ax.set(
+        xticks=range(len(dimensions)),
+        yticks=range(df_diff.shape[0]),
+        xticklabels=list(map(str.upper, dimensions)),
+        yticklabels=df_diff["cluster"],
+    )
+    ax.tick_params(axis="x", rotation=40, labelsize=10)
+    ax.tick_params(axis="y", labelsize=10)
+    ax.set_xlabel(
+        "" if xlabel is None else xlabel, fontsize=12, weight="bold", labelpad=15
+    )
+    ax.set_ylabel(
+        "" if ylabel is None else ylabel, fontsize=12, weight="bold", labelpad=15
+    )
+    for i in range(len(df_diff["cluster"].unique())):
         for j in range(len(dimensions)):
             val = df_diff.loc[i, dimensions[j]]
-            val_str = '{:.2f}'.format(val)
+            val_str = "{:.2f}".format(val)
             if val < 0:
-                val_str = '- ' + '{:.2f}'.format(-val)
+                val_str = "- " + "{:.2f}".format(-val)
 
-            text = ax.text(j, i, val_str,
-                           ha="center", va="center", color="black", fontsize=11, fontweight='ultralight',
-                           fontstretch='ultra-expanded')
+            text = ax.text(
+                j,
+                i,
+                val_str,
+                ha="center",
+                va="center",
+                color="black",
+                fontsize=11,
+                fontweight="ultralight",
+                fontstretch="ultra-expanded",
+            )
 
     # Turns off grid on the left axis
     ax.grid(False)
@@ -176,8 +253,16 @@ def plot_cluster_means_to_global_means_comparison(df, dimensions, weights=None, 
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_distribution_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, sharex=True, sharey=True,
-                                 output_path=None, savefig_kws=None):
+def plot_distribution_by_cluster(
+    df,
+    cluster_labels,
+    xlabel=None,
+    ylabel=None,
+    sharex=True,
+    sharey=True,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots the violin plots per cluster and *continuous* variables of interest to understand differences in their
     distributions by cluster.
@@ -204,39 +289,58 @@ def plot_distribution_by_cluster(df, cluster_labels, xlabel=None, ylabel=None, s
     """
     nclusters = len(np.unique(cluster_labels))
     nvars = df.shape[1]
-    ncols = max(1, min(nvars, 18//nclusters))
+    ncols = max(1, min(nvars, 18 // nclusters))
     if ncols > 3 and nvars % ncols > 0:
         if nvars % 3 == 0:
             ncols = 3
         elif nvars % 2 == 0:
-            ncols=2
+            ncols = 2
 
     nrows = nvars // ncols + (nvars % ncols > 0)
-    fig, axs = plt.subplots(nrows, ncols, figsize=(max(nclusters * ncols, 9), 5 * nrows), sharex=sharex, sharey=sharey)
+    fig, axs = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(max(nclusters * ncols, 9), 5 * nrows),
+        sharex=sharex,
+        sharey=sharey,
+    )
 
     i = 0
     for col in df.columns:
         ax = get_axis(i, axs, ncols, nrows)
         sns.violinplot(y=df[col], x=cluster_labels, linewidth=1, ax=ax)
-        plt.setp(ax.collections, alpha=.4)
-        sns.boxplot(y=df[col], x=cluster_labels, width=0.2, linewidth=1, color='grey', ax=ax)
-        sns.stripplot(y=df[col], x=cluster_labels, hue=list(map(str,cluster_labels)), alpha=0.5, size=3, ax=ax,
-                      legend=None)
+        plt.setp(ax.collections, alpha=0.4)
+        sns.boxplot(
+            y=df[col], x=cluster_labels, width=0.2, linewidth=1, color="grey", ax=ax
+        )
+        sns.stripplot(
+            y=df[col],
+            x=cluster_labels,
+            hue=list(map(str, cluster_labels)),
+            alpha=0.5,
+            size=3,
+            ax=ax,
+            legend=None,
+        )
         ax.set_ylabel(col if ylabel is None else ylabel, fontsize=12, labelpad=15)
-        if i // ncols == nrows-1:
-            ax.set_xlabel('cluster' if xlabel is None else xlabel, fontsize=12, labelpad=15)
+        if i // ncols == nrows - 1:
+            ax.set_xlabel(
+                "cluster" if xlabel is None else xlabel, fontsize=12, labelpad=15
+            )
         i += 1
 
     while i < ncols * nrows:
         ax = get_axis(i, axs, ncols, nrows)
-        ax.axis('off')
+        ax.axis("off")
         i += 1
 
     fig.tight_layout(pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_clusters_2D(x, y, hue, df, weights=None, style_kwargs=dict(), output_path=None, savefig_kws=None):
+def plot_clusters_2D(
+    x, y, hue, df, weights=None, style_kwargs=dict(), output_path=None, savefig_kws=None
+):
     """
     Plots two 2D plots:
      - A scatter plot styled by the categorical variable `hue`.
@@ -268,88 +372,164 @@ def plot_clusters_2D(x, y, hue, df, weights=None, style_kwargs=dict(), output_pa
         Save figure options.
     """
     # Style params
-    palette = 'gnuplot'
-    if style_kwargs.get('palette'):
-        palette = style_kwargs.get('palette')
+    palette = "gnuplot"
+    if style_kwargs.get("palette"):
+        palette = style_kwargs.get("palette")
 
     alpha = 0.3
-    if style_kwargs.get('alpha'):
-        alpha = style_kwargs.get('alpha')
+    if style_kwargs.get("alpha"):
+        alpha = style_kwargs.get("alpha")
 
-    vline_color = '#11A579'
-    if style_kwargs.get('vline_color'):
-        vline_color = style_kwargs.get('vline_color')
+    vline_color = "#11A579"
+    if style_kwargs.get("vline_color"):
+        vline_color = style_kwargs.get("vline_color")
 
-    hline_color = '#332288'
-    if style_kwargs.get('hline_color'):
-        vline_color = style_kwargs.get('hline_color')
+    hline_color = "#332288"
+    if style_kwargs.get("hline_color"):
+        vline_color = style_kwargs.get("hline_color")
 
     kdeplot = True
-    if style_kwargs.get('kdeplot') is not None:
-        kdeplot = style_kwargs.get('kdeplot')
+    if style_kwargs.get("kdeplot") is not None:
+        kdeplot = style_kwargs.get("kdeplot")
 
     fig, axs = plt.subplots(1, 2, figsize=(14, 5), sharey=True, sharex=True)
 
     xmean = df[x].mean()
-    xmean_label= f'Mean {x}'
+    xmean_label = f"Mean {x}"
     if weights is not None:
         xmean = weighted_mean(df[x], weights)
-        xmean_label = f'W. Mean {x}'
+        xmean_label = f"W. Mean {x}"
     x_range = df[x].max() - df[x].min()
     xmin = df[x].min() - x_range * 0.05
     xmax = df[x].max() + x_range * 0.05
 
     ymean = df[y].mean()
-    ymean_label = f'Mean {y}'
+    ymean_label = f"Mean {y}"
     if weights is not None:
         ymean = weighted_mean(df[y], weights)
-        ymean_label = f'W. Mean {y}'
+        ymean_label = f"W. Mean {y}"
     y_range = df[y].max() - df[y].min()
     ymin = df[y].min() - y_range * 0.05
     ymax = df[y].max() + y_range * 0.05
 
     # Left-hand side plot: Scatter plot colored by cluster category
-    sns.scatterplot(x=x, y=y, hue=hue, data=df.sort_values(hue), alpha=alpha, palette=palette, linewidth=0, ax=axs[0])
-    axs[0].vlines(xmean, ymin=ymin, ymax=ymax, color=vline_color, linewidth=1.15, linestyles='--', label=xmean_label)
-    axs[0].hlines(ymean, xmin=xmin, xmax=xmax, color=hline_color, linewidth=1.15, linestyles='--', label=ymean_label)
+    sns.scatterplot(
+        x=x,
+        y=y,
+        hue=hue,
+        data=df.sort_values(hue),
+        alpha=alpha,
+        palette=palette,
+        linewidth=0,
+        ax=axs[0],
+    )
+    axs[0].vlines(
+        xmean,
+        ymin=ymin,
+        ymax=ymax,
+        color=vline_color,
+        linewidth=1.15,
+        linestyles="--",
+        label=xmean_label,
+    )
+    axs[0].hlines(
+        ymean,
+        xmin=xmin,
+        xmax=xmax,
+        color=hline_color,
+        linewidth=1.15,
+        linestyles="--",
+        label=ymean_label,
+    )
     axs[0].set_xlabel(x, fontsize=12)
     axs[0].set_ylabel(y, fontsize=12)
-    axs[0].set_title('Scatter plot by cluster', fontsize=13)
+    axs[0].set_title("Scatter plot by cluster", fontsize=13)
     axs[0].set_xlim(xmin, xmax)
     axs[0].set_ylim(ymin, ymax)
 
     # Right-hand side plot: Cluster centroids with optional kernel density area
 
-    agg_method = 'mean'
+    agg_method = "mean"
     if weights is not None:
-        def wmean(v): return weighted_mean(v, weights[v.index])
+
+        def wmean(v):
+            return weighted_mean(v, weights[v.index])
+
         agg_method = wmean
     scatter_df = df.groupby(hue).agg(dict(zip([x, y], [agg_method] * 2))).reset_index()
 
-    sns.scatterplot(x=x, y=y, hue=hue, data=scatter_df,
-                    alpha=1, palette=palette, linewidth=0, marker='X', s=100, ax=axs[1])
+    sns.scatterplot(
+        x=x,
+        y=y,
+        hue=hue,
+        data=scatter_df,
+        alpha=1,
+        palette=palette,
+        linewidth=0,
+        marker="X",
+        s=100,
+        ax=axs[1],
+    )
 
     if kdeplot:
         hue_order = np.sort(df[hue].unique())
-        sns.kdeplot(x=x, y=y, hue=hue, data=df, levels=1, alpha=0.2, palette=palette,
-                    weights=weights, hue_order=hue_order, ax=axs[1])
+        sns.kdeplot(
+            x=x,
+            y=y,
+            hue=hue,
+            data=df,
+            levels=1,
+            alpha=0.2,
+            palette=palette,
+            weights=weights,
+            hue_order=hue_order,
+            ax=axs[1],
+        )
 
-    axs[1].vlines(xmean, ymin=ymin, ymax=ymax, color=vline_color, linewidth=1, linestyles='--', label=xmean_label)
-    axs[1].hlines(ymean, xmin=xmin, xmax=xmax, color=hline_color, linewidth=1, linestyles='--', label=ymean_label)
+    axs[1].vlines(
+        xmean,
+        ymin=ymin,
+        ymax=ymax,
+        color=vline_color,
+        linewidth=1,
+        linestyles="--",
+        label=xmean_label,
+    )
+    axs[1].hlines(
+        ymean,
+        xmin=xmin,
+        xmax=xmax,
+        color=hline_color,
+        linewidth=1,
+        linestyles="--",
+        label=ymean_label,
+    )
     axs[1].set_xlabel(x, fontsize=12)
     axs[1].set_ylabel(y, fontsize=12)
-    axs[1].set_title('Cluster centroids', fontsize=13)
+    axs[1].set_title("Cluster centroids", fontsize=13)
 
-    axs[0].legend(fontsize=11, title='', title_fontsize=12, labelspacing=0.5,
-                  loc=(0.93, 0.5 - 0.167 * (df[hue].nunique() // 4)))
-    axs[1].legend(fontsize=11, title='', title_fontsize=12, labelspacing=0.5,
-                  loc=(0.93, 0.5 - 0.167 * (df[hue].nunique() // 4)))
+    axs[0].legend(
+        fontsize=11,
+        title="",
+        title_fontsize=12,
+        labelspacing=0.5,
+        loc=(0.93, 0.5 - 0.167 * (df[hue].nunique() // 4)),
+    )
+    axs[1].legend(
+        fontsize=11,
+        title="",
+        title_fontsize=12,
+        labelspacing=0.5,
+        loc=(0.93, 0.5 - 0.167 * (df[hue].nunique() // 4)),
+    )
 
     fig.tight_layout(pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_cat_distribution_by_cluster(ct, cat_label=None, cluster_label=None, output_path=None, savefig_kws=None):
+def plot_cat_distribution_by_cluster(
+    ct, cat_label=None, cluster_label=None, output_path=None, savefig_kws=None
+):
     """
     Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
 
@@ -378,9 +558,17 @@ def plot_cat_distribution_by_cluster(ct, cat_label=None, cluster_label=None, out
         xcenters = left + widths / 2
         for y, (x, w) in enumerate(zip(xcenters, widths)):
             if w > 0.05:
-                color = '#737373' if i < len(ct.columns)//2 else '#d9d9d9'
-                plt.text(x, y, f'{str(np.round(w * 100, 1))}%', ha='center', va='center', color=color, fontsize=12,
-                         weight='light')
+                color = "#737373" if i < len(ct.columns) // 2 else "#d9d9d9"
+                plt.text(
+                    x,
+                    y,
+                    f"{str(np.round(w * 100, 1))}%",
+                    ha="center",
+                    va="center",
+                    color=color,
+                    fontsize=12,
+                    weight="light",
+                )
 
         left = left + ct[col].values
         i += 1
@@ -393,9 +581,15 @@ def plot_cat_distribution_by_cluster(ct, cat_label=None, cluster_label=None, out
             ncol = 4
 
     plt.gca().invert_yaxis()
-    plt.legend(ncol=ncol, loc='lower center', bbox_to_anchor=(0.5, 1), fontsize=12, title=cat_label,
-               title_fontsize=13)
-    plt.ylabel(cluster_label, fontsize=12, weight='bold', labelpad=15)
+    plt.legend(
+        ncol=ncol,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1),
+        fontsize=12,
+        title=cat_label,
+        title_fontsize=13,
+    )
+    plt.ylabel(cluster_label, fontsize=12, weight="bold", labelpad=15)
     plt.yticks(ticks=range(len(ct.index)), labels=list(ct.index), fontsize=11)
     plt.xticks([])
     plt.xlim(0, 1)

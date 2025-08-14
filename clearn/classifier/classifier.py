@@ -10,7 +10,12 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 
-from .utils import compute_highly_related_pairs, get_shap_importances, run_feature_selection, run_hyperparameter_tuning
+from .utils import (
+    compute_highly_related_pairs,
+    get_shap_importances,
+    run_feature_selection,
+    run_hyperparameter_tuning,
+)
 from .viz_utils import *
 
 
@@ -41,19 +46,29 @@ class Classifier:
         self.target = target
         self.labels_ = list(np.sort(np.unique(self.target)))
         self.model_ = None
-        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = tuple([None]*4)
+        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = tuple([None] * 4)
         self.grid_result_ = None
 
         # Initialize logger
-        logging.basicConfig(format='%(asctime)s %(levelname)-8s %(name)s: %(message)s',
-                            level=logging.INFO,
-                            datefmt='%Y-%m-%d %H:%M:%S')
+        logging.basicConfig(
+            format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
+            level=logging.INFO,
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
 
         self.logger = logging.getLogger(__name__)
 
-    def train_model(self, model=None, feature_selection=True, features_to_keep=[],
-                    feature_selection_model=None, hyperparameter_tuning=False, param_grid=None,
-                    train_size=0.8, balance_classes=False):
+    def train_model(
+        self,
+        model=None,
+        feature_selection=True,
+        features_to_keep=[],
+        feature_selection_model=None,
+        hyperparameter_tuning=False,
+        param_grid=None,
+        train_size=0.8,
+        balance_classes=False,
+    ):
         """
         This method trains a classification model.
 
@@ -99,26 +114,42 @@ class Classifier:
         X = self.df[self.original_features]
         transdict = dict(zip(self.labels_, range(len(self.labels_))))
         y = np.array(list(map(lambda s: transdict[s], self.target)))
-        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(X, y, train_size=train_size)
+        self.X_train_, self.X_test_, self.y_train_, self.y_test_ = train_test_split(
+            X, y, train_size=train_size
+        )
 
         hi_rel = None
         if balance_classes:
-            self.logger.info('Balancing classes...')
-            hi_rel = compute_highly_related_pairs(self.X_train_, self.num_vars, self.cat_vars)
+            self.logger.info("Balancing classes...")
+            hi_rel = compute_highly_related_pairs(
+                self.X_train_, self.num_vars, self.cat_vars
+            )
             oversample = SMOTE()
-            self.X_train_, self.y_train_ = oversample.fit_resample(self.X_train_, self.y_train_)
+            self.X_train_, self.y_train_ = oversample.fit_resample(
+                self.X_train_, self.y_train_
+            )
 
         # Feature selection
         if feature_selection:
-            self.logger.info('Running feature selection...')
+            self.logger.info("Running feature selection...")
             if feature_selection_model is None:
-                min_samples_leaf = max(10, int(np.ceil(self.X_train_.shape[0] * 0.05) / len(self.labels_)))
-                feature_selection_model = RandomForestClassifier(max_depth=10,  min_samples_leaf=min_samples_leaf,
-                                                                 random_state=42)
+                min_samples_leaf = max(
+                    10, int(np.ceil(self.X_train_.shape[0] * 0.05) / len(self.labels_))
+                )
+                feature_selection_model = RandomForestClassifier(
+                    max_depth=10, min_samples_leaf=min_samples_leaf, random_state=42
+                )
 
-            self.filtered_features_ = run_feature_selection(self.X_train_, self.original_features, self.y_train_,
-                                                            feature_selection_model, self.num_vars, self.cat_vars,
-                                                            features_to_keep, hi_rel)
+            self.filtered_features_ = run_feature_selection(
+                self.X_train_,
+                self.original_features,
+                self.y_train_,
+                feature_selection_model,
+                self.num_vars,
+                self.cat_vars,
+                features_to_keep,
+                hi_rel,
+            )
 
             self.X_train_ = self.X_train_[self.filtered_features_]
             self.X_test_ = self.X_test_[self.filtered_features_]
@@ -127,21 +158,27 @@ class Classifier:
 
         # Model instantiation
         if model is None:
-            model = XGBClassifier(eval_metric='auc', use_label_encoder=False, random_state=42)
+            model = XGBClassifier(
+                eval_metric="auc", use_label_encoder=False, random_state=42
+            )
         self.model_ = model
 
         # Hyperparameter tuning
         if hyperparameter_tuning:
             if param_grid is None:
-                raise RuntimeError('For hyperparameter tuning, some parameter grid must be passed - `param_grid`')
-            self.logger.info('Running hyperparameter tuning...')
-            self.grid_result_ = run_hyperparameter_tuning(self.X_train_, self.y_train_, self.model_, param_grid)
+                raise RuntimeError(
+                    "For hyperparameter tuning, some parameter grid must be passed - `param_grid`"
+                )
+            self.logger.info("Running hyperparameter tuning...")
+            self.grid_result_ = run_hyperparameter_tuning(
+                self.X_train_, self.y_train_, self.model_, param_grid
+            )
             self.model_.set_params(**self.grid_result_.best_params_)
 
         # Model training
-        self.logger.info('Training model...')
+        self.logger.info("Training model...")
         self.model_.fit(self.X_train_, self.y_train_)
-        self.logger.info('DONE!')
+        self.logger.info("DONE!")
 
     @property
     def feature_importances(self):
@@ -157,10 +194,16 @@ class Classifier:
         output_path : str, default=None
             If an output_path is passed, the resulting DataFame is saved as a CSV file.
         """
-        htm = pd.DataFrame(self.grid_result_.cv_results_['params'])
-        htm.columns = pd.MultiIndex.from_product([[f'{self.model_.__class__.__name__} Hyperparameters'], htm.columns])
-        htm[('Performance metrics', 'mean_test_score')] = self.grid_result_.cv_results_['mean_test_score']
-        htm[('Performance metrics', 'std_test_score')] = self.grid_result_.cv_results_['std_test_score']
+        htm = pd.DataFrame(self.grid_result_.cv_results_["params"])
+        htm.columns = pd.MultiIndex.from_product(
+            [[f"{self.model_.__class__.__name__} Hyperparameters"], htm.columns]
+        )
+        htm[("Performance metrics", "mean_test_score")] = self.grid_result_.cv_results_[
+            "mean_test_score"
+        ]
+        htm[("Performance metrics", "std_test_score")] = self.grid_result_.cv_results_[
+            "std_test_score"
+        ]
 
         if output_path is not None:
             htm.to_csv(output_path, index=False)
@@ -189,18 +232,20 @@ class Classifier:
         X = self.X_test_ if test else self.X_train_
         y = self.y_test_ if test else self.y_train_
 
-        cm = pd.DataFrame(confusion_matrix(y, self.model_.predict(X)),
-                          columns=pd.MultiIndex.from_product([['Predicted values'], self.labels_]),
-                          index=pd.MultiIndex.from_product([['Observed values'], self.labels_]))
+        cm = pd.DataFrame(
+            confusion_matrix(y, self.model_.predict(X)),
+            columns=pd.MultiIndex.from_product([["Predicted values"], self.labels_]),
+            index=pd.MultiIndex.from_product([["Observed values"], self.labels_]),
+        )
 
         if sum_stats:
             # Precision, recall, and global accuracy are appended to the table
             recall = np.diag(cm) / cm.sum(1)
             precision = np.diag(cm) / cm.sum()
             accuracy = np.diag(cm).sum() / cm.sum().sum()
-            cm['recall'] = recall
+            cm["recall"] = recall
             cm = cm.transpose()
-            cm['precision'] = list(precision) + [accuracy]
+            cm["precision"] = list(precision) + [accuracy]
             cm = cm.transpose()
 
         if output_path is not None:
@@ -230,7 +275,9 @@ class Classifier:
         X = self.X_test_ if test else self.X_train_
         y = self.y_test_ if test else self.y_train_
 
-        report = pd.DataFrame(classification_report(y, self.model_.predict(X), output_dict=True)).transpose()
+        report = pd.DataFrame(
+            classification_report(y, self.model_.predict(X), output_dict=True)
+        ).transpose()
 
         if output_path is not None:
             # In this case we do want to keep the index
@@ -252,9 +299,17 @@ class Classifier:
         savefig_kws : dict, default=None
            Save figure options.
         """
-        plot_shap_importances(self.model_, self.X_train_, n_top=n_top, output_path=output_path, savefig_kws=savefig_kws)
+        plot_shap_importances(
+            self.model_,
+            self.X_train_,
+            n_top=n_top,
+            output_path=output_path,
+            savefig_kws=savefig_kws,
+        )
 
-    def plot_shap_importances_beeswarm(self, class_id, n_top=10, output_path=None, savefig_kws=None):
+    def plot_shap_importances_beeswarm(
+        self, class_id, n_top=10, output_path=None, savefig_kws=None
+    ):
         """
         Plots a summary of shap values for a specific class of the target variable. This uses shap beeswarm plot
         (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/beeswarm.html).
@@ -270,10 +325,19 @@ class Classifier:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        plot_shap_importances_beeswarm(self.model_, self.X_train_, class_id, self.labels_[class_id], n_top=n_top,
-                                       output_path=output_path, savefig_kws=savefig_kws)
+        plot_shap_importances_beeswarm(
+            self.model_,
+            self.X_train_,
+            class_id,
+            self.labels_[class_id],
+            n_top=n_top,
+            output_path=output_path,
+            savefig_kws=savefig_kws,
+        )
 
-    def plot_confusion_matrix(self, test=True, sum_stats=True, output_path=None, savefig_kws=None):
+    def plot_confusion_matrix(
+        self, test=True, sum_stats=True, output_path=None, savefig_kws=None
+    ):
         """
         This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seaborn heatmap visualization.
 
@@ -290,24 +354,35 @@ class Classifier:
             Save figure options.
         """
         cm = self.confusion_matrix(test, sum_stats)
-        plot_confusion_matrix(cm, sum_stats=sum_stats, figsize=(cm.shape[0]+1, cm.shape[0]),
-                              output_path=output_path, savefig_kws=savefig_kws)
+        plot_confusion_matrix(
+            cm,
+            sum_stats=sum_stats,
+            figsize=(cm.shape[0] + 1, cm.shape[0]),
+            output_path=output_path,
+            savefig_kws=savefig_kws,
+        )
 
     def plot_roc_curves(self, test=True, output_path=None, savefig_kws=None):
         """
-       Plots ROC curve for every class.
+        Plots ROC curve for every class.
 
-       Parameters
-       ---------
-       test : boolean, default=True
-            If True, returns the confusion matrix calculated on the test set. If False, returns the confusion matrix on
-            the train set.
-       output_path : str, default=None
-           Path to save figure as image.
-       savefig_kws : dict, default=None
-           Save figure options.
-       """
+        Parameters
+        ---------
+        test : boolean, default=True
+             If True, returns the confusion matrix calculated on the test set. If False, returns the confusion matrix on
+             the train set.
+        output_path : str, default=None
+            Path to save figure as image.
+        savefig_kws : dict, default=None
+            Save figure options.
+        """
         X = self.X_test_ if test else self.X_train_
         y = self.y_test_ if test else self.y_train_
-        plot_roc_curves(X, y, self.model_, self.labels_, output_path=output_path,
-                        savefig_kws=savefig_kws)
+        plot_roc_curves(
+            X,
+            y,
+            self.model_,
+            self.labels_,
+            output_path=output_path,
+            savefig_kws=savefig_kws,
+        )

@@ -21,7 +21,12 @@ def apply_benzecri_eigenvalue_correction(eigenvalues, K):
     ----------
     `numpy.array` with corrected eigenvalues
     """
-    return np.array([(K/(K-1.)*(lamb - 1./K))**2 if lamb > 1./K else 0 for lamb in eigenvalues])
+    return np.array(
+        [
+            (K / (K - 1.0) * (lamb - 1.0 / K)) ** 2 if lamb > 1.0 / K else 0
+            for lamb in eigenvalues
+        ]
+    )
 
 
 def compute_greenacre_inertia(eigenvalues, K, J):
@@ -42,5 +47,5 @@ def compute_greenacre_inertia(eigenvalues, K, J):
     greenacre_inertia : `numpy.array`
         Greenacre inertia
     """
-    greenacre_inertia = K / (K - 1.) * (sum(eigenvalues ** 2) - (J - K) / K ** 2)
+    greenacre_inertia = K / (K - 1.0) * (sum(eigenvalues**2) - (J - K) / K**2)
     return greenacre_inertia

@@ -8,12 +8,17 @@ import shap
 
 from sklearn.feature_selection import RFECV
 from sklearn.model_selection import GridSearchCV
-from ..utils import compute_high_corr_pairs, compute_highly_related_categorical_vars, compute_highly_related_mixed_vars
+from ..utils import (
+    compute_high_corr_pairs,
+    compute_highly_related_categorical_vars,
+    compute_highly_related_mixed_vars,
+)
 
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(name)s: %(message)s',
+    format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
     level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,14 +42,26 @@ def get_shap_importances(classifier, X):
     """
     explainer = shap.Explainer(classifier)
     shap_values = explainer(X)
-    shap_importance_values = [np.abs(shap_values.values[:, i, :]).mean() for i in range(shap_values.values.shape[1])]
-    importances = pd.DataFrame(
-        data={'variable_name': shap_values.feature_names, 'shap_importance': shap_importance_values}).sort_values(
-        'shap_importance', ascending=False).reset_index(drop=True)
+    shap_importance_values = [
+        np.abs(shap_values.values[:, i, :]).mean()
+        for i in range(shap_values.values.shape[1])
+    ]
+    importances = (
+        pd.DataFrame(
+            data={
+                "variable_name": shap_values.feature_names,
+                "shap_importance": shap_importance_values,
+            }
+        )
+        .sort_values("shap_importance", ascending=False)
+        .reset_index(drop=True)
+    )
     return importances
 
 
-def compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None, mixed_kws=None, cat_kws=None):
+def compute_highly_related_pairs(
+    df, num_vars=None, cat_vars=None, num_kws=None, mixed_kws=None, cat_kws=None
+):
     """
     Computes strongly related pairs of variables. Depending on the type of variables, a correlation coefficient
     (numerical variables), partial eta squared (mixed-type variables), or mutual information (categorical variables) is
@@ -69,7 +86,7 @@ def compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None,
         used as independent variable for model-based imputation).
     """
     if num_vars is None and cat_vars is None:
-        raise ValueError('Numerical or categorical variable lists are required.')
+        raise ValueError("Numerical or categorical variable lists are required.")
 
     # Numerical variable pairs (correlation)
     num_pairs = pd.DataFrame()
@@ -81,7 +98,9 @@ def compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None,
     mixed_pairs = pd.DataFrame()
     if num_vars and cat_vars:
         mixed_kws = mixed_kws if mixed_kws else dict()
-        mixed_pairs = compute_highly_related_mixed_vars(df, num_vars, cat_vars, **mixed_kws)
+        mixed_pairs = compute_highly_related_mixed_vars(
+            df, num_vars, cat_vars, **mixed_kws
+        )
 
     # Categorical variable pairs (mutual information)
     cat_pairs = pd.DataFrame()
@@ -93,19 +112,31 @@ def compute_highly_related_pairs(df, num_vars=None, cat_vars=None, num_kws=None,
     return final_pairs
 
 
-def run_feature_selection(df, original_features, target, classifier, num_vars=None, cat_vars=None, features_to_keep=[],
-                          hi_rel=None, num_kws=None, mixed_kws=None, cat_kws=None, rfecv_kws=None):
+def run_feature_selection(
+    df,
+    original_features,
+    target,
+    classifier,
+    num_vars=None,
+    cat_vars=None,
+    features_to_keep=[],
+    hi_rel=None,
+    num_kws=None,
+    mixed_kws=None,
+    cat_kws=None,
+    rfecv_kws=None,
+):
     """
     Performs feature selection in three steps:
         - First, if some features must be kept (informed in `features_to_keep`), those other
-          features that highly related with those in `features_to_keep` are removed.
+            features that highly related with those in `features_to_keep` are removed.
 
         - Next, a classifier is iteratively trained to obtain feature shap importances.
-          In each iteration, the feature with the highest shape importance which has not been previously
-          visited is selected and all other highly related features are removed.
+            In each iteration, the feature with the highest shape importance which has not been previously
+            visited is selected and all other highly related features are removed.
 
         - Finally, Recursive Feature Elimination with Cross-Validation (RFECV) is applied on the remaining
-          features.
+            features.
 
     Parameters
     ----------
@@ -143,24 +174,29 @@ def run_feature_selection(df, original_features, target, classifier, num_vars=No
         tot_vars += len(cat_vars)
     if num_vars:
         tot_vars += len(num_vars)
-    assert len(original_features) == tot_vars, "`original_features` != `num_vars` + `cat_vars`"
+    assert len(original_features) == tot_vars, (
+        "`original_features` != `num_vars` + `cat_vars`"
+    )
 
     # First, we compute highly related pairs of variables
     if num_kws is None:
         num_kws = dict(corr_thres=0.8)
     if hi_rel is None:
-        hi_rel = compute_highly_related_pairs(df, num_vars, cat_vars, num_kws, mixed_kws, cat_kws)
+        hi_rel = compute_highly_related_pairs(
+            df, num_vars, cat_vars, num_kws, mixed_kws, cat_kws
+        )
 
     filtered_features = original_features.copy()
 
     if hi_rel.shape[0] > 0:
         # Next, we remove variables highly correlated with the ones indicated to be kept
         for v in features_to_keep:
-            for v2 in hi_rel.loc[hi_rel['var1'] == v, 'var2'].to_list():
+            for v2 in hi_rel.loc[hi_rel["var1"] == v, "var2"].to_list():
                 if v2 in filtered_features:
                     if v2 in features_to_keep:
                         logger.warning(
-                            f'Variables {v} and {v2} are highly correlated, and both were selected to be kept.')
+                            f"Variables {v} and {v2} are highly correlated, and both were selected to be kept."
+                        )
                     else:
                         filtered_features.remove(v2)
 
@@ -177,10 +213,10 @@ def run_feature_selection(df, original_features, target, classifier, num_vars=No
             classifier.fit(X, y)
             importances = get_shap_importances(classifier, X)
             updated = False
-            for feat in importances['variable_name']:
-                if feat in hi_rel['var1'].to_list() and feat not in visited:
+            for feat in importances["variable_name"]:
+                if feat in hi_rel["var1"].to_list() and feat not in visited:
                     visited.append(feat)
-                    for var2 in hi_rel.loc[hi_rel['var1'] == feat, 'var2'].to_list():
+                    for var2 in hi_rel.loc[hi_rel["var1"] == feat, "var2"].to_list():
                         if var2 in filtered_features and var2 not in features_to_keep:
                             filtered_features.remove(var2)
                     updated = True
@@ -199,7 +235,9 @@ def run_feature_selection(df, original_features, target, classifier, num_vars=No
     return filtered_features
 
 
-def run_hyperparameter_tuning(X_train, y_train, classifier, param_grid, gridsearch_kws=None):
+def run_hyperparameter_tuning(
+    X_train, y_train, classifier, param_grid, gridsearch_kws=None
+):
     """
     Runs grid search with cross-validation for hyperparameter tuning.
 

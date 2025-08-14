@@ -6,14 +6,14 @@ from .data_preprocessing import (
     impute_missing_values_with_highly_related_pairs,
     mutual_information_pair_scores,
     remove_outliers,
-    variable_graph_partitioning
+    variable_graph_partitioning,
 )
 
 from .viz_utils import (
-	missing_values_heatmap,
+    missing_values_heatmap,
     plot_imputation_pairs_scatter,
     plot_imputation_distribution_assessment,
-    plot_variable_graph_partitioning_components
+    plot_variable_graph_partitioning_components,
 )
 
 __all__ = [
@@ -27,8 +27,8 @@ __all__ = [
     "remove_outliers",
     "variable_graph_partitioning",
     # visualization utils
-	"missing_values_heatmap",
+    "missing_values_heatmap",
     "plot_imputation_pairs_scatter",
     "plot_imputation_distribution_assessment",
-    "plot_variable_graph_partitioning_components"
+    "plot_variable_graph_partitioning_components",
 ]

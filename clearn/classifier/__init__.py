@@ -1,6 +1,4 @@
-from .classifier import (
-    Classifier
-)
+from .classifier import Classifier
 
 __all__ = [
     # classifier

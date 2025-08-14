@@ -5,18 +5,35 @@ import pandas as pd
 import statsmodels.api as sm
 
 from scipy.stats import chi2_contingency
-from sklearn.cluster import AgglomerativeClustering, KMeans
-from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
+from sklearn.cluster import KMeans
+from sklearn.metrics import (
+    calinski_harabasz_score,
+    davies_bouldin_score,
+    silhouette_score,
+)
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.formula.api import ols
 from .table_utils import *
 from .utils import *
 from .viz_utils import *
 
-__metrics__ = ['inertia', 'davies_bouldin_score', 'silhouette_score', 'calinski_harabasz_score']
-METRIC_NAMES = dict(zip(__metrics__,
-                        ['Weighted Sum of Squared Distances', 'Davies Bouldin Score', 'Silhouette Score',
-                         'Calinski and Harabasz score']))
+__metrics__ = [
+    "inertia",
+    "davies_bouldin_score",
+    "silhouette_score",
+    "calinski_harabasz_score",
+]
+METRIC_NAMES = dict(
+    zip(
+        __metrics__,
+        [
+            "Weighted Sum of Squared Distances",
+            "Davies Bouldin Score",
+            "Silhouette Score",
+            "Calinski and Harabasz score",
+        ],
+    )
+)
 
 
 class Clustering:
@@ -34,11 +51,8 @@ class Clustering:
         Whether to apply data normalization for fair comparisons between variables. By default it is applied. In case
         dimensionality reduction is applied beforehand, normalization should not be applied.
     """
-    def __init__(self,
-                 df,
-                 algorithms=None,
-                 normalize=True):
 
+    def __init__(self, df, algorithms=None, normalize=True):
         # Normalize variables for fair comparisons
         self.normalize = normalize
         self.df = df.copy()
@@ -60,12 +74,14 @@ class Clustering:
                 self.algorithms.append(str(algorithm))
                 self.instances_[self.algorithms[-1]] = algorithm
             else:
-                raise RuntimeWarning(f'Algorithm {str(algorithm)} does not comply with scikit-learn standard')
+                raise RuntimeWarning(
+                    f"Algorithm {str(algorithm)} does not comply with scikit-learn standard"
+                )
 
         self.scores_ = dict()
         self._initialize_scores()
 
-        self.metric_ = 'inertia'
+        self.metric_ = "inertia"
         self.labels_ = None
         self.optimal_config_ = None
         self.weights_ = None
@@ -77,60 +93,102 @@ class Clustering:
     def _compute_clusters(self, algorithm, n_clusters, weights=None):
         n_clusters_param_name = get_n_clusters_param_name(self.instances_[algorithm])
         self.instances_[algorithm].set_params(**{n_clusters_param_name: n_clusters})
-        if accepts_param(self.instances_[algorithm].fit_predict, 'sample_weight'):
-            self.labels_ = self.instances_[algorithm].fit_predict(self.df[self.dimensions_], sample_weight=weights)
+        if accepts_param(self.instances_[algorithm].fit_predict, "sample_weight"):
+            self.labels_ = self.instances_[algorithm].fit_predict(
+                self.df[self.dimensions_], sample_weight=weights
+            )
         else:
-            self.labels_ = self.instances_[algorithm].fit_predict(self.df[self.dimensions_])
+            self.labels_ = self.instances_[algorithm].fit_predict(
+                self.df[self.dimensions_]
+            )
 
     def _compute_optimal_clustering_config(self, metric, cluster_range, weights=None):
         optimal_list = []
         for algorithm in self.algorithms:
-            n_clusters_param_name = get_n_clusters_param_name(self.instances_[algorithm])
+            n_clusters_param_name = get_n_clusters_param_name(
+                self.instances_[algorithm]
+            )
             for nc in range(*cluster_range):
                 self.instances_[algorithm].set_params(**{n_clusters_param_name: nc})
 
                 local_labels = None
-                if accepts_param(self.instances_[algorithm].fit_predict, 'sample_weight'):
-                    local_labels = self.instances_[algorithm].fit_predict(self.df[self.dimensions_],
-                                                                          sample_weight=weights)
+                if accepts_param(
+                    self.instances_[algorithm].fit_predict, "sample_weight"
+                ):
+                    local_labels = self.instances_[algorithm].fit_predict(
+                        self.df[self.dimensions_], sample_weight=weights
+                    )
                 else:
-                    local_labels = self.instances_[algorithm].fit_predict(self.df[self.dimensions_])
+                    local_labels = self.instances_[algorithm].fit_predict(
+                        self.df[self.dimensions_]
+                    )
 
-                if metric == 'inertia':
+                if metric == "inertia":
                     self.scores_[algorithm].append(
-                        weighted_sum_of_squared_distances(self.df[self.dimensions_], local_labels, weights))
-                elif metric == 'davies_bouldin_score':
+                        weighted_sum_of_squared_distances(
+                            self.df[self.dimensions_], local_labels, weights
+                        )
+                    )
+                elif metric == "davies_bouldin_score":
                     self.scores_[algorithm].append(
-                        1 if nc == 1 else davies_bouldin_score(self.df[self.dimensions_], local_labels))
-                elif metric == 'silhouette_score':
+                        1
+                        if nc == 1
+                        else davies_bouldin_score(
+                            self.df[self.dimensions_], local_labels
+                        )
+                    )
+                elif metric == "silhouette_score":
                     self.scores_[algorithm].append(
-                        0 if nc == 1 else silhouette_score(self.df[self.dimensions_], local_labels))
+                        0
+                        if nc == 1
+                        else silhouette_score(self.df[self.dimensions_], local_labels)
+                    )
 
-                elif metric == 'calinski_harabasz_score':
+                elif metric == "calinski_harabasz_score":
                     self.scores_[algorithm].append(
-                        1 if nc == 1 else calinski_harabasz_score(self.df[self.dimensions_], local_labels))
+                        1
+                        if nc == 1
+                        else calinski_harabasz_score(
+                            self.df[self.dimensions_], local_labels
+                        )
+                    )
 
             if len(range(*cluster_range)) > 1:
                 first_score = 0
                 new_cluster_range = cluster_range
-                curve = 'convex'
-                direction = 'decreasing'
-                if metric != 'inertia':
+                curve = "convex"
+                direction = "decreasing"
+                if metric != "inertia":
                     first_score = 1
                     new_cluster_range = [2, cluster_range[1]]
-                    if metric != 'davies_bouldin_score':
-                        curve = 'concave'
-                        direction='increasing'
+                    if metric != "davies_bouldin_score":
+                        curve = "concave"
+                        direction = "increasing"
 
-                kl = KneeLocator(x=range(*new_cluster_range), y=self.scores_[algorithm][first_score:],
-								 curve=curve, direction=direction)					 
-                optimal_list.append((algorithm, kl.knee, self.scores_[algorithm][kl.knee-1]))
+                kl = KneeLocator(
+                    x=range(*new_cluster_range),
+                    y=self.scores_[algorithm][first_score:],
+                    curve=curve,
+                    direction=direction,
+                )
+                optimal_list.append(
+                    (algorithm, kl.knee, self.scores_[algorithm][kl.knee - 1])
+                )
             else:
-                optimal_list.append((algorithm, cluster_range[0], self.scores_[algorithm][0]))
+                optimal_list.append(
+                    (algorithm, cluster_range[0], self.scores_[algorithm][0])
+                )
 
         return min(optimal_list, key=lambda t: t[2])
 
-    def compute_clusters(self, n_clusters=None, metric='inertia', max_clusters=10, prefix=None, weights=None):
+    def compute_clusters(
+        self,
+        n_clusters=None,
+        metric="inertia",
+        max_clusters=10,
+        prefix=None,
+        weights=None,
+    ):
         """
         Calculates clusters.
         If more than one algorithm is passed in the class constructor, first, the optimal number of clusters
@@ -165,8 +223,8 @@ class Clustering:
             Cluster label of each observation.
         """
         if metric not in __metrics__:
-            raise RuntimeError(f'''Metric {metric} not supported.
-                               Supported metrics: {__metrics__}''')
+            raise RuntimeError(f"""Metric {metric} not supported.
+                               Supported metrics: {__metrics__}""")
 
         self._initialize_scores()
         self.metric_ = metric
@@ -179,24 +237,36 @@ class Clustering:
         else:
             cluster_range = [1, max_clusters + 1]
 
-        self.optimal_config_ = self._compute_optimal_clustering_config(metric, cluster_range, weights)
+        self.optimal_config_ = self._compute_optimal_clustering_config(
+            metric, cluster_range, weights
+        )
 
         if self.optimal_config_ is None:
-            raise RuntimeError('Optimal cluster configuration not available')
+            raise RuntimeError("Optimal cluster configuration not available")
 
-        self._compute_clusters(self.optimal_config_[0], self.optimal_config_[1], weights)
+        self._compute_clusters(
+            self.optimal_config_[0], self.optimal_config_[1], weights
+        )
 
         # Might be interesting to only keep one
-        self.df['cluster'] = self.labels_
-        self.df['cluster_cat'] = self.labels_
+        self.df["cluster"] = self.labels_
+        self.df["cluster_cat"] = self.labels_
         if prefix is not None:
             name_len = len(str(max(self.labels_)))
-            self.df['cluster_cat'] = list(map(lambda x: f'{prefix}_{str.zfill(str(x), name_len)}', self.labels_))
+            self.df["cluster_cat"] = list(
+                map(lambda x: f"{prefix}_{str.zfill(str(x), name_len)}", self.labels_)
+            )
 
         return self.labels_
 
-    def describe_clusters(self, df_ext=None, variables=None, cluster_filter=None, statistics=['mean', 'median', 'std'],
-                          output_path=None):
+    def describe_clusters(
+        self,
+        df_ext=None,
+        variables=None,
+        cluster_filter=None,
+        statistics=["mean", "median", "std"],
+        output_path=None,
+    ):
         """
         Describes clusters based on internal or external *continuous* variables.
         For categorical variables use `describe_clusters_cat()`.
@@ -226,42 +296,59 @@ class Clustering:
         """
         if df_ext is not None:
             df_ext = df_ext.copy()
-            df_ext['cluster'] = self.labels_
+            df_ext["cluster"] = self.labels_
         else:
-            df_ext = self.df[self.dimensions_ + ['cluster']]
+            df_ext = self.df[self.dimensions_ + ["cluster"]]
 
         if variables is not None:
             if not isinstance(variables, list):
                 variables = [variables]
-            df_ext = df_ext[variables + ['cluster']]
+            df_ext = df_ext[variables + ["cluster"]]
         else:
             variables = df_ext.columns.to_list()
-            variables.remove('cluster')
+            variables.remove("cluster")
 
         if cluster_filter is None:
-            cluster_filter = list(df_ext['cluster'].unique())
+            cluster_filter = list(df_ext["cluster"].unique())
         if not isinstance(cluster_filter, list):
             cluster_filter = [cluster_filter]
 
         if not isinstance(statistics, list):
             statistics = [statistics]
-        if 'wmean' in statistics:
-            def wmean(x): return weighted_mean(x, self.weights_[x.index])
-            statistics[statistics.index('wmean')] = wmean
-        if 'wstd' in statistics:
-            def wstd(x): return weighted_std(x, self.weights_[x.index])
-            statistics[statistics.index('wstd')] = wstd
+        if "wmean" in statistics:
 
-        res = df_ext[df_ext['cluster'].isin(cluster_filter)].groupby('cluster').agg(
-            dict(zip(list(variables), [statistics] * len(variables)))).reset_index()
+            def wmean(x):
+                return weighted_mean(x, self.weights_[x.index])
+
+            statistics[statistics.index("wmean")] = wmean
+        if "wstd" in statistics:
+
+            def wstd(x):
+                return weighted_std(x, self.weights_[x.index])
+
+            statistics[statistics.index("wstd")] = wstd
+
+        res = (
+            df_ext[df_ext["cluster"].isin(cluster_filter)]
+            .groupby("cluster")
+            .agg(dict(zip(list(variables), [statistics] * len(variables))))
+            .reset_index()
+        )
 
         if output_path is not None:
             res.to_csv(output_path, index=False)
 
         return res
 
-    def describe_clusters_cat(self, cat_array, cat_name, order=None, normalize=False, use_weights=False,
-                              output_path=None):
+    def describe_clusters_cat(
+        self,
+        cat_array,
+        cat_name,
+        order=None,
+        normalize=False,
+        use_weights=False,
+        output_path=None,
+    ):
         """
         Describes clusters based on  external *categorical* variables. The result is a contingency table.
         For continuous variables use `describe_clusters()`.
@@ -287,21 +374,33 @@ class Clustering:
         freq : `pandas.DataFrame`
             DataFrame with a cluster description based on the passed categorical variable.
         """
-        freq = pd.crosstab(index=self.df['cluster_cat'], columns=cat_array, rownames=['Clusters'], colnames=[cat_name])
+        freq = pd.crosstab(
+            index=self.df["cluster_cat"],
+            columns=cat_array,
+            rownames=["Clusters"],
+            colnames=[cat_name],
+        )
         if use_weights:
-            wcrosstab_df = pd.DataFrame(data=[self.df['cluster_cat'], cat_array, self.weights_],
-                                        index=['Clusters', cat_name, 'weights']).transpose()
-            freq = wcrosstab_df.groupby(['Clusters', cat_name]).agg({'weights': 'sum'}).reset_index()\
-                .pivot(index='Clusters', columns=cat_name, values='weights').fillna(0)
+            wcrosstab_df = pd.DataFrame(
+                data=[self.df["cluster_cat"], cat_array, self.weights_],
+                index=["Clusters", cat_name, "weights"],
+            ).transpose()
+            freq = (
+                wcrosstab_df.groupby(["Clusters", cat_name])
+                .agg({"weights": "sum"})
+                .reset_index()
+                .pivot(index="Clusters", columns=cat_name, values="weights")
+                .fillna(0)
+            )
 
         if order is not None:
             freq = freq[order]
 
         if normalize:
-            freq['total'] = freq.sum(1)
+            freq["total"] = freq.sum(1)
             for col in freq.columns[:-1]:
-                freq[col] = freq[col] / freq['total']
-            freq = freq.drop(columns='total')
+                freq[col] = freq[col] / freq["total"]
+            freq = freq.drop(columns="total")
 
         if output_path is not None:
             freq.to_csv(output_path, index=False)
@@ -329,13 +428,22 @@ class Clustering:
         if df_original is not None:
             var_names = list(df_original.columns)
             df_original = df_original.copy()
-            df_original['cluster'] = self.labels_
-            return compare_cluster_means_to_global_means(df_original, var_names, self.weights_, output_path=output_path)
+            df_original["cluster"] = self.labels_
+            return compare_cluster_means_to_global_means(
+                df_original, var_names, self.weights_, output_path=output_path
+            )
         else:
-            return compare_cluster_means_to_global_means(self.df, self.dimensions_, self.weights_,
-                                                         data_standardized=not self.normalize, output_path=output_path)
+            return compare_cluster_means_to_global_means(
+                self.df,
+                self.dimensions_,
+                self.weights_,
+                data_standardized=not self.normalize,
+                output_path=output_path,
+            )
 
-    def anova_tests(self, df_test=None, vars_test=None, cluster_filter=None, output_path=None):
+    def anova_tests(
+        self, df_test=None, vars_test=None, cluster_filter=None, output_path=None
+    ):
         """
         Runs ANOVA tests for a given set of continuous variables (internal or external) to test dependency with
         clusters.
@@ -361,30 +469,33 @@ class Clustering:
         """
         if df_test is not None:
             df_test = df_test.copy()
-            df_test['cluster'] = self.labels_
+            df_test["cluster"] = self.labels_
         else:
-            df_test = self.df[self.dimensions_ + ['cluster']]
+            df_test = self.df[self.dimensions_ + ["cluster"]]
 
         if vars_test is not None:
             if not isinstance(vars_test, list):
                 vars_test = [vars_test]
-            df_test = df_test[vars_test + ['cluster']]
+            df_test = df_test[vars_test + ["cluster"]]
 
         if cluster_filter is None:
-            cluster_filter = list(df_test['cluster'].unique())
+            cluster_filter = list(df_test["cluster"].unique())
         if not isinstance(cluster_filter, list):
             cluster_filter = [cluster_filter]
 
         res = []
         col_names = []
         variables = df_test.columns.to_list()
-        variables.remove('cluster')
+        variables.remove("cluster")
         for var in variables:
-            model = ols(f'{var} ~ C(cluster)', data=df_test[df_test['cluster'].isin(cluster_filter)]).fit()
+            model = ols(
+                f"{var} ~ C(cluster)",
+                data=df_test[df_test["cluster"].isin(cluster_filter)],
+            ).fit()
             aov_table = sm.stats.anova_lm(model, typ=1)
             res.append([var] + aov_table.iloc[0].to_list())
             if len(col_names) == 0:
-                col_names = ['var_name'] + aov_table.columns.tolist()
+                col_names = ["var_name"] + aov_table.columns.tolist()
 
         res = pd.DataFrame(res, columns=col_names)
         if output_path is not None:
@@ -407,9 +518,9 @@ class Clustering:
         dict : dictionary
             Dictionary with the corresponding test statistics.
         """
-        contingency_t = self.describe_clusters_cat(cat_array, '')
+        contingency_t = self.describe_clusters_cat(cat_array, "")
         test_res = chi2_contingency(contingency_t.values)
-        return dict(zip(['chi2', 'p', 'dof'], test_res[:-1]))
+        return dict(zip(["chi2", "p", "dof"], test_res[:-1]))
 
     def plot_score_comparison(self, output_path=None, savefig_kws=None):
         """
@@ -430,7 +541,9 @@ class Clustering:
         else:
             cluster_range = [self.optimal_config_[1], self.optimal_config_[1] + 1]
 
-        plot_score_comparison(self.scores_, cluster_range, metric_name, output_path, savefig_kws)
+        plot_score_comparison(
+            self.scores_, cluster_range, metric_name, output_path, savefig_kws
+        )
 
     def plot_optimal_components_normalized(self, output_path=None, savefig_kws=None):
         """
@@ -445,19 +558,28 @@ class Clustering:
         """
         if len(self.scores_[self.optimal_config_[0]]) > 1:
             first_score = 0
-            curve = 'convex'
-            direction = 'decreasing'
-            if self.metric_ != 'inertia':
+            curve = "convex"
+            direction = "decreasing"
+            if self.metric_ != "inertia":
                 first_score = 1
-                if self.metric_ != 'davies_bouldin_score':
-                    curve = 'concave'
-                    direction='increasing'
+                if self.metric_ != "davies_bouldin_score":
+                    curve = "concave"
+                    direction = "increasing"
 
-            plot_optimal_components_normalized(self.scores_[self.optimal_config_[0]],
-                                               len(self.scores_[self.optimal_config_[0]]), METRIC_NAMES[self.metric_],
-                                               first_score, curve, direction, output_path, savefig_kws)
+            plot_optimal_components_normalized(
+                self.scores_[self.optimal_config_[0]],
+                len(self.scores_[self.optimal_config_[0]]),
+                METRIC_NAMES[self.metric_],
+                first_score,
+                curve,
+                direction,
+                output_path,
+                savefig_kws,
+            )
         else:
-            raise RuntimeError('This plot can only be used when `cluster_range` contains at least 2 values')
+            raise RuntimeError(
+                "This plot can only be used when `cluster_range` contains at least 2 values"
+            )
 
     def plot_clustercount(self, use_weights=False, output_path=None, savefig_kws=None):
         """
@@ -474,9 +596,16 @@ class Clustering:
         """
         plot_clustercount(self.df, self.weights_, output_path, savefig_kws)
 
-    def plot_cluster_means_to_global_means_comparison(self, use_weights=False, df_original=None, xlabel=None, ylabel=None,
-                                                      levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
-                                                      output_path=None, savefig_kws=None):
+    def plot_cluster_means_to_global_means_comparison(
+        self,
+        use_weights=False,
+        df_original=None,
+        xlabel=None,
+        ylabel=None,
+        levels=[-0.50, -0.32, -0.17, -0.05, 0.05, 0.17, 0.32, 0.50],
+        output_path=None,
+        savefig_kws=None,
+    ):
         """
         Plots the normalized curve used for computing the optimal number of clusters.
 
@@ -506,18 +635,35 @@ class Clustering:
         if df_original is not None:
             var_names = list(df_original.columns)
             df_original = df_original.copy()
-            df_original['cluster'] = self.labels_
+            df_original["cluster"] = self.labels_
 
-            plot_cluster_means_to_global_means_comparison(df_original, var_names, weights, xlabel, ylabel, levels,
-                                                          data_standardized=False, output_path=output_path,
-                                                          savefig_kws=savefig_kws)
+            plot_cluster_means_to_global_means_comparison(
+                df_original,
+                var_names,
+                weights,
+                xlabel,
+                ylabel,
+                levels,
+                data_standardized=False,
+                output_path=output_path,
+                savefig_kws=savefig_kws,
+            )
         else:
-            plot_cluster_means_to_global_means_comparison(self.df, self.dimensions_, weights, xlabel, ylabel, levels,
-                                                          data_standardized=not self.normalize, output_path=output_path,
-                                                          savefig_kws=savefig_kws)
+            plot_cluster_means_to_global_means_comparison(
+                self.df,
+                self.dimensions_,
+                weights,
+                xlabel,
+                ylabel,
+                levels,
+                data_standardized=not self.normalize,
+                output_path=output_path,
+                savefig_kws=savefig_kws,
+            )
 
-    def plot_distribution_comparison_by_cluster(self, df_ext=None, xlabel=None, ylabel=None, output_path=None,
-                                                savefig_kws=None):
+    def plot_distribution_comparison_by_cluster(
+        self, df_ext=None, xlabel=None, ylabel=None, output_path=None, savefig_kws=None
+    ):
         """
         Plots the violin plots per cluster and *continuous* variables of interest to understand differences in their
         distributions by cluster.
@@ -542,10 +688,25 @@ class Clustering:
         else:
             sharey = False
 
-        plot_distribution_by_cluster(df_ext, self.labels_, xlabel=xlabel, ylabel=ylabel, sharey=sharey,
-                                     output_path=output_path, savefig_kws=savefig_kws)
+        plot_distribution_by_cluster(
+            df_ext,
+            self.labels_,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            sharey=sharey,
+            output_path=output_path,
+            savefig_kws=savefig_kws,
+        )
 
-    def plot_clusters_2D(self, coor1, coor2, use_weights=False, style_kwargs=dict(), output_path=None, savefig_kws=None):
+    def plot_clusters_2D(
+        self,
+        coor1,
+        coor2,
+        use_weights=False,
+        style_kwargs=dict(),
+        output_path=None,
+        savefig_kws=None,
+    ):
         """
         Plots two 2D plots:
          - A scatter plot styled by the categorical variable `hue`.
@@ -584,22 +745,44 @@ class Clustering:
         df_ext = self.df
         if isinstance(coor1, pd.Series):
             if not isinstance(coor2, pd.Series):
-                raise TypeError('For external variables, both coor1 and coor2 need to be of type pandas.Series')
-            df_ext = pd.DataFrame(data={coor1.name: coor1,
-                                        coor2.name: coor2,
-                                        'cluster_cat': self.df['cluster_cat'].values})
+                raise TypeError(
+                    "For external variables, both coor1 and coor2 need to be of type pandas.Series"
+                )
+            df_ext = pd.DataFrame(
+                data={
+                    coor1.name: coor1,
+                    coor2.name: coor2,
+                    "cluster_cat": self.df["cluster_cat"].values,
+                }
+            )
             coor1 = coor1.name
             coor2 = coor2.name
 
-        hue = 'cluster_cat'
+        hue = "cluster_cat"
         weights = None
         if use_weights:
             weights = self.weights_
-        plot_clusters_2D(coor1, coor2, hue, df_ext, weights, style_kwargs=style_kwargs, output_path=output_path,
-                         savefig_kws=savefig_kws)
+        plot_clusters_2D(
+            coor1,
+            coor2,
+            hue,
+            df_ext,
+            weights,
+            style_kwargs=style_kwargs,
+            output_path=output_path,
+            savefig_kws=savefig_kws,
+        )
 
-    def plot_cat_distribution_by_cluster(self, cat_array, cat_label, cluster_label=None, order=None,
-                                         use_weights=False, output_path=None, savefig_kws=None):
+    def plot_cat_distribution_by_cluster(
+        self,
+        cat_array,
+        cat_label,
+        cluster_label=None,
+        order=None,
+        use_weights=False,
+        output_path=None,
+        savefig_kws=None,
+    ):
         """
         Plots the relative contingency table of the clusters with a categorical variable as a stacked bar plot.
 
@@ -621,5 +804,9 @@ class Clustering:
         savefig_kws : dict, default=None
             Save figure options.
         """
-        ct = self.describe_clusters_cat(cat_array, cat_label, order=order, normalize=True, use_weights=use_weights)
-        plot_cat_distribution_by_cluster(ct, cat_label, cluster_label, output_path, savefig_kws)
+        ct = self.describe_clusters_cat(
+            cat_array, cat_label, order=order, normalize=True, use_weights=use_weights
+        )
+        plot_cat_distribution_by_cluster(
+            ct, cat_label, cluster_label, output_path, savefig_kws
+        )

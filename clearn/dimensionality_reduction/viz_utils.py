@@ -13,57 +13,112 @@ from matplotlib.gridspec import GridSpec
 from .table_utils import cat_main_contributors, num_main_contributors
 from ..utils import get_axis, plot_optimal_normalized_elbow, savefig
 
-sns.set_style('whitegrid')
+sns.set_style("whitegrid")
 
-__types__ = ['cumulative', 'ratio', 'normalized']
+__types__ = ["cumulative", "ratio", "normalized"]
 
 
 def _plot_cumulative_explained_var(explained_variance_ratio, kl, thres, ax):
     n_components = len(explained_variance_ratio)
 
-    ax.plot(np.append([0], explained_variance_ratio.cumsum()), label='', color='#332288')
+    ax.plot(
+        np.append([0], explained_variance_ratio.cumsum()), label="", color="#332288"
+    )
 
-    ax.axhline(thres, 0.01, 0.99, linestyle='--', linewidth=1, color='grey',
-               label=f'{int(thres * 100)}% Explained variance')
+    ax.axhline(
+        thres,
+        0.01,
+        0.99,
+        linestyle="--",
+        linewidth=1,
+        color="grey",
+        label=f"{int(thres * 100)}% Explained variance",
+    )
     ax.set_yticks(np.append(ax.get_yticks()[1:-1], [thres]))
 
-    ax.axvline(kl.knee, linestyle='--', linewidth=1, color='#E73F74', label=f'Optimal number of components')
-    ax.axvline((explained_variance_ratio.cumsum() < thres).sum()+1, linestyle='--', linewidth=1, color='#11A579',
-               label=f'Minimum number of components for {int(thres * 100)}% explained variance')
-    ax.set_xticks(np.append(ax.get_xticks()[1:-1], [kl.knee, (explained_variance_ratio.cumsum() < thres).sum()+1]))
+    ax.axvline(
+        kl.knee,
+        linestyle="--",
+        linewidth=1,
+        color="#E73F74",
+        label="Optimal number of components",
+    )
+    ax.axvline(
+        (explained_variance_ratio.cumsum() < thres).sum() + 1,
+        linestyle="--",
+        linewidth=1,
+        color="#11A579",
+        label=f"Minimum number of components for {int(thres * 100)}% explained variance",
+    )
+    ax.set_xticks(
+        np.append(
+            ax.get_xticks()[1:-1],
+            [kl.knee, (explained_variance_ratio.cumsum() < thres).sum() + 1],
+        )
+    )
     ax.set_xlim(-n_components * 0.02, n_components * 1.02)
 
-    ax.set_ylabel('Explained variance (cumulative ratio)', fontsize=13, labelpad=15)
+    ax.set_ylabel("Explained variance (cumulative ratio)", fontsize=13, labelpad=15)
     ax.legend(fontsize=12, labelspacing=0.5)
 
 
 def _plot_explained_var_ratio(explained_variance_ratio, kl, ax):
     n_components = len(explained_variance_ratio)
 
-    ax.plot([np.nan] + list(explained_variance_ratio), color='#332288', label='')
+    ax.plot([np.nan] + list(explained_variance_ratio), color="#332288", label="")
 
     avg_explained_var = 1 / (n_components - 1)
-    ax.axhline(avg_explained_var, 0.01, 0.99, linestyle='--', linewidth=1, color='grey',
-               label='Average explained variance (%)')
+    ax.axhline(
+        avg_explained_var,
+        0.01,
+        0.99,
+        linestyle="--",
+        linewidth=1,
+        color="grey",
+        label="Average explained variance (%)",
+    )
     ax.set_yticks(np.append(ax.get_yticks()[1:-1], [avg_explained_var]))
 
-    ax.axvline(kl.knee, linestyle='--', linewidth=1, color='#E73F74', label=f'Optimal number of components')
-    ax.axvline((explained_variance_ratio > avg_explained_var).sum(), linestyle='--', linewidth=1,
-               color='#11A579', label=f'Number of components above average explained variance')
+    ax.axvline(
+        kl.knee,
+        linestyle="--",
+        linewidth=1,
+        color="#E73F74",
+        label="Optimal number of components",
+    )
+    ax.axvline(
+        (explained_variance_ratio > avg_explained_var).sum(),
+        linestyle="--",
+        linewidth=1,
+        color="#11A579",
+        label="Number of components above average explained variance",
+    )
     ax.set_xticks(
-        np.append(ax.get_xticks()[1:-1], [kl.knee, (explained_variance_ratio > avg_explained_var).sum()]))
+        np.append(
+            ax.get_xticks()[1:-1],
+            [kl.knee, (explained_variance_ratio > avg_explained_var).sum()],
+        )
+    )
     ax.set_xlim(-n_components * 0.02, n_components * 1.02)
 
-    ax.set_ylabel('Explained variance (ratio)', fontsize=13, labelpad=8)
+    ax.set_ylabel("Explained variance (ratio)", fontsize=13, labelpad=8)
     ax.legend(fontsize=12, labelspacing=0.5)
 
 
 def _plot_normalized_explained_var(explained_variance_ratio, kl, ax):
-    plot_optimal_normalized_elbow(explained_variance_ratio, kl, ax, optimal_label='Optimal number of components',
-                                  xlabel='Number of components', ylabel='Normalized explained variance curve')
+    plot_optimal_normalized_elbow(
+        explained_variance_ratio,
+        kl,
+        ax,
+        optimal_label="Optimal number of components",
+        xlabel="Number of components",
+        ylabel="Normalized explained variance curve",
+    )
 
 
-def plot_explained_variance(explained_variance_ratio, thres=0.5, plots='all', output_path=None, savefig_kws=None):
+def plot_explained_variance(
+    explained_variance_ratio, thres=0.5, plots="all", output_path=None, savefig_kws=None
+):
     """
     Plot the explained variance (ratio, cumulative, and/or normalized)
 
@@ -84,28 +139,31 @@ def plot_explained_variance(explained_variance_ratio, thres=0.5, plots='all', ou
 
     n_components = len(explained_variance_ratio)
 
-    if plots == 'all':
+    if plots == "all":
         plots = __types__
     if not isinstance(plots, list):
         plots = [plots]
 
-    kl = KneeLocator(x=range(1, n_components + 1), y=explained_variance_ratio, curve='convex',
-                     direction='decreasing')
+    kl = KneeLocator(
+        x=range(1, n_components + 1),
+        y=explained_variance_ratio,
+        curve="convex",
+        direction="decreasing",
+    )
 
     fig, axs = plt.subplots(len(plots), 1, figsize=(8, 5 * len(plots)))
 
     i = 0
     for p in plots:
-
         ax = axs
         if len(plots) > 1:
             ax = axs[i]
 
-        if p == 'cumulative':
+        if p == "cumulative":
             _plot_cumulative_explained_var(explained_variance_ratio, kl, thres, ax)
-        elif p == 'ratio':
+        elif p == "ratio":
             _plot_explained_var_ratio(explained_variance_ratio, kl, ax)
-        elif p == 'normalized':
+        elif p == "normalized":
             _plot_normalized_explained_var(explained_variance_ratio, kl, ax)
         else:
             raise NameError(f"Plot type '{p}' does not exists")
@@ -115,8 +173,15 @@ def plot_explained_variance(explained_variance_ratio, thres=0.5, plots='all', ou
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_num_main_contributors(df, df_trans, thres=0.5, n_contributors=5, dim_idx=None, output_path=None,
-                               savefig_kws=None):
+def plot_num_main_contributors(
+    df,
+    df_trans,
+    thres=0.5,
+    n_contributors=5,
+    dim_idx=None,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plot main contributors (original variables with the strongest relation with derived variables) for
     every derived variable
@@ -140,50 +205,74 @@ def plot_num_main_contributors(df, df_trans, thres=0.5, n_contributors=5, dim_id
         Save figure options.
     """
 
-    cmap = matplotlib.cm.get_cmap('coolwarm')
+    cmap = matplotlib.cm.get_cmap("coolwarm")
     n_contributors = np.minimum(n_contributors, df.shape[1])
-    mc = num_main_contributors(df, df_trans, thres=thres, n_contributors=n_contributors, dim_idx=dim_idx)
-    mc['corr_coeff_abs'] = np.abs(mc['corr_coeff'])
-    mc = mc.sort_values(by=['component', 'corr_coeff_abs']).reset_index(drop=True).drop(columns='corr_coeff_abs')
-    nplots = mc['component'].nunique()
+    mc = num_main_contributors(
+        df, df_trans, thres=thres, n_contributors=n_contributors, dim_idx=dim_idx
+    )
+    mc["corr_coeff_abs"] = np.abs(mc["corr_coeff"])
+    mc = (
+        mc.sort_values(by=["component", "corr_coeff_abs"])
+        .reset_index(drop=True)
+        .drop(columns="corr_coeff_abs")
+    )
+    nplots = mc["component"].nunique()
     ncols = 2
     if nplots == 1:
         ncols = 1
     elif nplots % 2 > 0 or nplots % 3 == 0:
         ncols = 3
 
-    nbars = mc.groupby('component')['var_name'].count().max()
+    nbars = mc.groupby("component")["var_name"].count().max()
 
     nrows = nplots // ncols + (nplots % ncols > 0)
     fig, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 0.6 * nbars * nrows))
     xticks = (np.array(range(9)) - 4) / 4
 
     i = 0
-    for pc in mc['component'].unique():
+    for pc in mc["component"].unique():
         ax = get_axis(i, axs, ncols, nrows)
-        n_pc_contrib = mc[mc['component'] == pc].shape[0]
-        ax.barh(y=range(n_pc_contrib), width=mc.loc[mc['component'] == pc, 'corr_coeff'],
-                color=list(map(lambda x: cmap(x), (mc.loc[mc['component'] == pc, 'corr_coeff'] + 1) / 2)), alpha=0.95)
-        ax.vlines(0, -0.5, n_pc_contrib - 0.5, color='black', linewidth=0.5)
+        n_pc_contrib = mc[mc["component"] == pc].shape[0]
+        ax.barh(
+            y=range(n_pc_contrib),
+            width=mc.loc[mc["component"] == pc, "corr_coeff"],
+            color=list(
+                map(
+                    lambda x: cmap(x),
+                    (mc.loc[mc["component"] == pc, "corr_coeff"] + 1) / 2,
+                )
+            ),
+            alpha=0.95,
+        )
+        ax.vlines(0, -0.5, n_pc_contrib - 0.5, color="black", linewidth=0.5)
         if i // ncols == nrows - 1:
-            ax.set_xlabel('Correlation coefficient', fontsize=12)
+            ax.set_xlabel("Correlation coefficient", fontsize=12)
         ax.set_xticks(ticks=xticks)
         ax.set_yticks(ticks=range(n_pc_contrib))
-        ax.set_yticklabels(labels=mc.loc[mc['component'] == pc, 'var_name'], rotation=0, fontsize=11)
+        ax.set_yticklabels(
+            labels=mc.loc[mc["component"] == pc, "var_name"], rotation=0, fontsize=11
+        )
         ax.set_title(str.upper(pc), fontsize=13)
         i += 1
 
-    while i < ncols*nrows:
+    while i < ncols * nrows:
         ax = get_axis(i, axs, ncols, nrows)
-        ax.axis('off')
+        ax.axis("off")
         i += 1
 
     fig.tight_layout(pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contributors=None, dim_idx=None,
-                                           output_path=None, savefig_kws=None):
+def plot_cat_main_contributor_distribution(
+    df,
+    df_trans,
+    thres=0.14,
+    n_contributors=None,
+    dim_idx=None,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plot main contributors (original variables with the strongest relation with derived variables) for
     every derived variable
@@ -206,24 +295,27 @@ def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contribut
     savefig_kws : dict, default=None
         Save figure options.
     """
-    dim_name = ''
+    dim_name = ""
     if dim_idx is not None:
         dim_name = df_trans.columns[dim_idx]
         df_trans = df_trans[dim_name].to_frame()
     else:
         raise RuntimeWarning(
-            '''`plot_disc_main_contributor_distribution` is designed to plot one component at a time. 
-            Provide a value for dim_idx''')
+            """`plot_disc_main_contributor_distribution` is designed to plot one component at a time. 
+            Provide a value for dim_idx"""
+        )
 
-    mc = cat_main_contributors(df, df_trans, thres=thres, n_contributors=n_contributors, dim_idx=dim_idx)
+    mc = cat_main_contributors(
+        df, df_trans, thres=thres, n_contributors=n_contributors, dim_idx=dim_idx
+    )
 
     ncols = mc.shape[0]
     if ncols > 5:
-        raise Warning(f'''{ncols} original variables are highly related to de new construct variable.
-                      Only the strongest 5 will be shown.''')
+        raise Warning(f"""{ncols} original variables are highly related to de new construct variable.
+                      Only the strongest 5 will be shown.""")
         ncols = 5
 
-    nrows = np.lcm.reduce(df[mc['var_name'].tolist()].nunique().tolist())
+    nrows = np.lcm.reduce(df[mc["var_name"].tolist()].nunique().tolist())
 
     fig = plt.figure(figsize=(np.minimum(6 * ncols, 20), 5))
     gs = GridSpec(nrows, ncols, figure=fig)
@@ -231,33 +323,44 @@ def plot_cat_main_contributor_distribution(df, df_trans, thres=0.14, n_contribut
 
     j = 0
     for idx, row in mc.iterrows():
-        var_name = row['var_name']
+        var_name = row["var_name"]
         nvalues = df[var_name].nunique()
 
         i = 0
         ax0 = None
         for v in np.sort(df[var_name].unique()):
-            ax = fig.add_subplot(gs[i:i + int(nrows / nvalues), j], sharex=ax0, sharey=ax0)
-            sns.kdeplot(data=df[df[var_name] == v], x=dim_name, color='blue', fill=True, ax=ax)
-            ax.set_title(f'{var_name} = {v}', fontsize=10)
-            ax.set_ylabel('')
+            ax = fig.add_subplot(
+                gs[i : i + int(nrows / nvalues), j], sharex=ax0, sharey=ax0
+            )
+            sns.kdeplot(
+                data=df[df[var_name] == v], x=dim_name, color="blue", fill=True, ax=ax
+            )
+            ax.set_title(f"{var_name} = {v}", fontsize=10)
+            ax.set_ylabel("")
 
             i += int(nrows / nvalues)
             if i < nrows:
-                ax.set_xlabel('')
+                ax.set_xlabel("")
 
             if ax0 is None:
                 ax0 = ax
         j += 1
 
     sns.despine(fig)
-    fig.supylabel('Density functions', fontsize=13, x=0.01)
+    fig.supylabel("Density functions", fontsize=13, x=0.01)
     fig.tight_layout(w_pad=3)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_cumulative_explained_var_comparison(explained_variance_ratio1, explained_variance_ratio2, name1=None,
-                                             name2=None, thres=None, output_path=None, savefig_kws=None):
+def plot_cumulative_explained_var_comparison(
+    explained_variance_ratio1,
+    explained_variance_ratio2,
+    name1=None,
+    name2=None,
+    thres=None,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots comparison of cumulative explained variance between two techniques.
 
@@ -279,24 +382,40 @@ def plot_cumulative_explained_var_comparison(explained_variance_ratio1, explaine
         Save figure options.
     """
     fig, ax = plt.subplots(figsize=(7, 5))
-    ax.plot(np.append([0], explained_variance_ratio1), color='#7F3C8D', label=name1)
-    ax.plot(np.append([0], explained_variance_ratio2), color='#11A579', label=name2)
+    ax.plot(np.append([0], explained_variance_ratio1), color="#7F3C8D", label=name1)
+    ax.plot(np.append([0], explained_variance_ratio2), color="#11A579", label=name2)
     if thres is not None:
-        ax.axhline(thres, 0.01, 0.99, linestyle='--', linewidth=1, color='grey',
-                   label=f'{int(thres*100)}% Explained variance')
+        ax.axhline(
+            thres,
+            0.01,
+            0.99,
+            linestyle="--",
+            linewidth=1,
+            color="grey",
+            label=f"{int(thres * 100)}% Explained variance",
+        )
         ax.set_yticks(np.append(ax.get_yticks()[1:-1], [thres]))
-    n_components = np.maximum(len(explained_variance_ratio1), len(explained_variance_ratio2))
+    n_components = np.maximum(
+        len(explained_variance_ratio1), len(explained_variance_ratio2)
+    )
     ax.set_xlim(-n_components * 0.02, n_components * 1.02)
-    ax.set_ylabel('Explained variance (cumulative ratio)', fontsize=13, labelpad=15)
+    ax.set_ylabel("Explained variance (cumulative ratio)", fontsize=13, labelpad=15)
     ax.legend(fontsize=12, labelspacing=0.5)
-    ax.set_xlabel('Number of components', fontsize=13, labelpad=15)
+    ax.set_xlabel("Number of components", fontsize=13, labelpad=15)
     ax.legend(fontsize=12, labelspacing=0.5)
     fig.tight_layout(w_pad=2)
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_compare_pca_based_components(components_pca, components_other, original_vars, other_name='Sparse PCA', n_pc=1,
-                                      output_path=None, savefig_kws=None):
+def plot_compare_pca_based_components(
+    components_pca,
+    components_other,
+    original_vars,
+    other_name="Sparse PCA",
+    n_pc=1,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots comparison of cumulative explained variance between two techniques.
 
@@ -318,14 +437,29 @@ def plot_compare_pca_based_components(components_pca, components_other, original
         Save figure options.
     """
     plt.figure(figsize=(16, 5))
-    plt.bar(x=range(len(components_pca)), height=components_pca, label='PCA', color='#11A579', alpha=0.5)
-    plt.plot(range(len(components_other)), components_other, 'o', label=other_name, color='#CF1C90', alpha=0.67)
+    plt.bar(
+        x=range(len(components_pca)),
+        height=components_pca,
+        label="PCA",
+        color="#11A579",
+        alpha=0.5,
+    )
+    plt.plot(
+        range(len(components_other)),
+        components_other,
+        "o",
+        label=other_name,
+        color="#CF1C90",
+        alpha=0.67,
+    )
 
-    plt.hlines(0, 0, len(components_other), color='black', linewidth=0.5)
-    plt.ylabel('Coefficients', fontsize=12)
-    plt.xticks(ticks=range(len(original_vars)), labels=original_vars, rotation=90, fontsize=11)
-    plt.legend(fontsize=12, title='Method', title_fontsize=13, labelspacing=0.5)
+    plt.hlines(0, 0, len(components_other), color="black", linewidth=0.5)
+    plt.ylabel("Coefficients", fontsize=12)
+    plt.xticks(
+        ticks=range(len(original_vars)), labels=original_vars, rotation=90, fontsize=11
+    )
+    plt.legend(fontsize=12, title="Method", title_fontsize=13, labelspacing=0.5)
     plt.xlim(-1, len(original_vars))
-    plt.title(f'Principal Component {str(n_pc).zfill(2)}', fontsize=14)
+    plt.title(f"Principal Component {str(n_pc).zfill(2)}", fontsize=14)
     plt.tight_layout()
     savefig(output_path=output_path, savefig_kws=savefig_kws)

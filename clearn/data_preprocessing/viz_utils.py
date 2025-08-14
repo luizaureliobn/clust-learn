@@ -28,8 +28,15 @@ def missing_values_heatmap(df, output_path=None, savefig_kws=None):
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_imputation_pairs_scatter(df, imputation_pairs, sample_frac=1.0, scatter_kws=None, line_kws=None,
-                                  output_path=None, savefig_kws=None):
+def plot_imputation_pairs_scatter(
+    df,
+    imputation_pairs,
+    sample_frac=1.0,
+    scatter_kws=None,
+    line_kws=None,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots a grid of scatter plots with every pair of independent-dependent variables used for one-to-one model-based
     imputation.
@@ -49,8 +56,8 @@ def plot_imputation_pairs_scatter(df, imputation_pairs, sample_frac=1.0, scatter
     savefig_kws : dict, default=None
         Save figure options.
     """
-    scatter_kws = scatter_kws if scatter_kws else dict(color='blue', alpha=0.05)
-    line_kws = line_kws if line_kws else dict(color='red')
+    scatter_kws = scatter_kws if scatter_kws else dict(color="blue", alpha=0.05)
+    line_kws = line_kws if line_kws else dict(color="red")
 
     ncols = min(4, imputation_pairs.shape[0])
     nrows = int(np.ceil(imputation_pairs.shape[0] / ncols))
@@ -60,7 +67,14 @@ def plot_imputation_pairs_scatter(df, imputation_pairs, sample_frac=1.0, scatter
     i = 0
     for idx, row in imputation_pairs.iterrows():
         ax = get_axis(i, axs, ncols, nrows)
-        sns.regplot(x=row['var2'], y=row['var1'], data=df_sample, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
+        sns.regplot(
+            x=row["var2"],
+            y=row["var1"],
+            data=df_sample,
+            scatter_kws=scatter_kws,
+            line_kws=line_kws,
+            ax=ax,
+        )
         ax.set_xlabel(f"{row['var2']} ({'{:.2f}'.format(row['missing_var2'])}% NA)")
         ax.set_ylabel(f"{row['var1']} ({'{:.2f}'.format(row['missing_var1'])}% NA)")
         i += 1
@@ -69,8 +83,16 @@ def plot_imputation_pairs_scatter(df, imputation_pairs, sample_frac=1.0, scatter
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_imputation_distribution_assessment(df_prior, df_posterior, imputed_vars, sample_frac=1.0, prior_kws=None,
-                                            posterior_kws=None, output_path=None, savefig_kws=None):
+def plot_imputation_distribution_assessment(
+    df_prior,
+    df_posterior,
+    imputed_vars,
+    sample_frac=1.0,
+    prior_kws=None,
+    posterior_kws=None,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots a distribution comparison of each variable with imputed variables, before and after imputation.
 
@@ -91,8 +113,8 @@ def plot_imputation_distribution_assessment(df_prior, df_posterior, imputed_vars
     savefig_kws : dict, default=None
         Save figure options.
     """
-    prior_kws = prior_kws if prior_kws else dict(color='#7F3C8D')
-    posterior_kws = posterior_kws if posterior_kws else dict(color='#11A579')
+    prior_kws = prior_kws if prior_kws else dict(color="#7F3C8D")
+    posterior_kws = posterior_kws if posterior_kws else dict(color="#11A579")
 
     ncols = min(4, len(imputed_vars))
     nrows = int(np.ceil(len(imputed_vars) / ncols))
@@ -102,9 +124,16 @@ def plot_imputation_distribution_assessment(df_prior, df_posterior, imputed_vars
     i = 0
     for ivar in imputed_vars:
         ax = get_axis(i, axs, ncols, nrows)
-        sns.kdeplot(x=ivar, data=df_prior_sample, label='Before imputation', ax=ax, **prior_kws)
-        sns.kdeplot(x=ivar, data=df_posterior.loc[df_prior_sample.index], label='After imputation', ax=ax,
-                    **posterior_kws)
+        sns.kdeplot(
+            x=ivar, data=df_prior_sample, label="Before imputation", ax=ax, **prior_kws
+        )
+        sns.kdeplot(
+            x=ivar,
+            data=df_posterior.loc[df_prior_sample.index],
+            label="After imputation",
+            ax=ax,
+            **posterior_kws,
+        )
         ax.legend()
         i += 1
 
@@ -112,8 +141,13 @@ def plot_imputation_distribution_assessment(df_prior, df_posterior, imputed_vars
     savefig(output_path=output_path, savefig_kws=savefig_kws)
 
 
-def plot_variable_graph_partitioning_components(edges, connected_components, graph_style_kws=None, output_path=None,
-                                                savefig_kws=None):
+def plot_variable_graph_partitioning_components(
+    edges,
+    connected_components,
+    graph_style_kws=None,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     Plots a connected components of a graph.
     **Note** this function relies on `ldbx.data_processing.variable_graph_partitioning()` for computing the edges and
@@ -134,10 +168,16 @@ def plot_variable_graph_partitioning_components(edges, connected_components, gra
         Save figure options.
     """
     if graph_style_kws is None:
-        graph_style_kws = dict(node_size=16, width=0.4, edge_color='grey', node_color='red', with_labels=True)
+        graph_style_kws = dict(
+            node_size=16,
+            width=0.4,
+            edge_color="grey",
+            node_color="red",
+            with_labels=True,
+        )
 
     nrows = np.shape(connected_components)[0]
-    fig, axs = plt.subplots(nrows, 1, figsize=(12, 5*nrows))
+    fig, axs = plt.subplots(nrows, 1, figsize=(12, 5 * nrows))
 
     for i in range(nrows):
         fedges = []

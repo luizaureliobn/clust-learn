@@ -13,7 +13,7 @@ from sklearn.metrics import roc_curve, auc
 from .utils import get_shap_importances
 from ..utils import savefig
 
-sns.set_style('whitegrid')
+sns.set_style("whitegrid")
 
 
 def plot_shap_importances(model, X, n_top=7, output_path=None, savefig_kws=None):
@@ -36,20 +36,31 @@ def plot_shap_importances(model, X, n_top=7, output_path=None, savefig_kws=None)
     """
     si = get_shap_importances(model, X)
     low_imp = si.loc[n_top:]
-    si = si.loc[:n_top - 1]
-    si = pd.concat([si,
-                    pd.DataFrame({'variable_name': ['Rest'], 'shap_importance': [low_imp['shap_importance'].sum()]})],
-                   ignore_index=True)
+    si = si.loc[: n_top - 1]
+    si = pd.concat(
+        [
+            si,
+            pd.DataFrame(
+                {
+                    "variable_name": ["Rest"],
+                    "shap_importance": [low_imp["shap_importance"].sum()],
+                }
+            ),
+        ],
+        ignore_index=True,
+    )
     fig, ax = plt.subplots(figsize=(10, 0.675 * si.shape[0]))
-    ax = sns.barplot(x='shap_importance', y='variable_name', data=si, color='#ff0051')
-    ax.bar_label(ax.containers[0], padding=5, fmt='%.4f', fontsize=10)
-    ax.set_xlabel('mean(|SHAP values|)', fontsize=12)
-    ax.set_ylabel('')
+    ax = sns.barplot(x="shap_importance", y="variable_name", data=si, color="#ff0051")
+    ax.bar_label(ax.containers[0], padding=5, fmt="%.4f", fontsize=10)
+    ax.set_xlabel("mean(|SHAP values|)", fontsize=12)
+    ax.set_ylabel("")
     fig.tight_layout()
     savefig(output_path, savefig_kws)
 
 
-def plot_shap_importances_beeswarm(model, X, class_id, class_name=None, n_top=10, output_path=None, savefig_kws=None):
+def plot_shap_importances_beeswarm(
+    model, X, class_id, class_name=None, n_top=10, output_path=None, savefig_kws=None
+):
     """
     Plots a summary of shap values for a specific class of the target variable. This uses shap beeswarm plot
     (https://shap.readthedocs.io/en/latest/example_notebooks/api_examples/plots/beeswarm.html).
@@ -73,16 +84,27 @@ def plot_shap_importances_beeswarm(model, X, class_id, class_name=None, n_top=10
     """
     explainer = shap.Explainer(model)
     shap_values = explainer(X)
-    shap.plots.beeswarm(shap_values[:, :, class_id], show=False, max_display=n_top+1)
+    shap.plots.beeswarm(shap_values[:, :, class_id], show=False, max_display=n_top + 1)
     if class_name is None:
         class_name = str(class_id)
-    plt.title(f'SHAP values summary for class {class_name}', fontsize=13)
+    plt.title(f"SHAP values summary for class {class_name}", fontsize=13)
     savefig(output_path, savefig_kws)
 
 
-def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_stats=True, xyticks=True,
-                          xyplotlabels=True, figsize=None, cmap='Blues', title=None, output_path=None,
-                          savefig_kws=None):
+def plot_confusion_matrix(
+    cf,
+    group_names=None,
+    count=True,
+    percent=True,
+    sum_stats=True,
+    xyticks=True,
+    xyplotlabels=True,
+    figsize=None,
+    cmap="Blues",
+    title=None,
+    output_path=None,
+    savefig_kws=None,
+):
     """
     This function makes a pretty plot of an sklearn Confusion Matrix cf using a Seaborn heatmap visualization.
 
@@ -118,7 +140,7 @@ def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_st
     """
 
     # CODE TO GENERATE TEXT INSIDE EACH SQUARE
-    blanks = ['' for i in range(cf.size)]
+    blanks = ["" for i in range(cf.size)]
 
     if group_names and len(group_names) == cf.size:
         group_labels = ["{}\n".format(value) for value in group_names]
@@ -129,9 +151,15 @@ def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_st
     if count:
         # Format of totals is different
         if sum_stats:
-            group_counts = ["{0:0.0f}\n".format(flatten[i]) if (
-                        i % cf.shape[0] < cf.shape[0] - 1 and i // cf.shape[0] < cf.shape[0] - 1)
-                            else "{0:.2%}".format(flatten[i]) for i in range(len(flatten))]
+            group_counts = [
+                "{0:0.0f}\n".format(flatten[i])
+                if (
+                    i % cf.shape[0] < cf.shape[0] - 1
+                    and i // cf.shape[0] < cf.shape[0] - 1
+                )
+                else "{0:.2%}".format(flatten[i])
+                for i in range(len(flatten))
+            ]
         else:
             group_counts = ["{0:0.0f}\n".format(value) for value in flatten]
     else:
@@ -140,15 +168,27 @@ def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_st
     if percent:
         # Format of totals is different
         if sum_stats:
-            group_percentages = ["{0:.2%}".format(flatten[i] / np.sum(cf.values)) if (
-                        i % cf.shape[0] < cf.shape[0] - 1 and i // cf.shape[0] < cf.shape[0] - 1)
-                                 else "" for i in range(len(flatten))]
+            group_percentages = [
+                "{0:.2%}".format(flatten[i] / np.sum(cf.values))
+                if (
+                    i % cf.shape[0] < cf.shape[0] - 1
+                    and i // cf.shape[0] < cf.shape[0] - 1
+                )
+                else ""
+                for i in range(len(flatten))
+            ]
         else:
-            group_percentages = ["{0:.2%}".format(value) for value in cf.values.flatten() / np.sum(cf.values)]
+            group_percentages = [
+                "{0:.2%}".format(value)
+                for value in cf.values.flatten() / np.sum(cf.values)
+            ]
     else:
         group_percentages = blanks
 
-    box_labels = [f"{v1}{v2}{v3}".strip() for v1, v2, v3 in zip(group_labels, group_counts, group_percentages)]
+    box_labels = [
+        f"{v1}{v2}{v3}".strip()
+        for v1, v2, v3 in zip(group_labels, group_counts, group_percentages)
+    ]
     box_labels = np.asarray(box_labels).reshape(cf.shape[0], cf.shape[1])
 
     # Cluster names as tick labels. If precision, recall, and global accuracy are included, no tick label is displayed
@@ -156,26 +196,35 @@ def plot_confusion_matrix(cf, group_names=None, count=True, percent=True, sum_st
     xyticklabels = False
     if xyticks:
         if sum_stats:
-            xyticklabels = list(map(lambda x: x[1], cf.columns[:-1])) + ['']
+            xyticklabels = list(map(lambda x: x[1], cf.columns[:-1])) + [""]
         else:
             xyticklabels = list(map(lambda x: x[1], cf.columns))
 
     # MAKE THE HEATMAP VISUALIZATION
     ax, fig = plt.subplots(figsize=figsize)
-    sns.heatmap(cf.values, annot=box_labels, fmt="", cmap=cmap, cbar=False, xticklabels=xyticklabels,
-                yticklabels=xyticklabels)
+    sns.heatmap(
+        cf.values,
+        annot=box_labels,
+        fmt="",
+        cmap=cmap,
+        cbar=False,
+        xticklabels=xyticklabels,
+        yticklabels=xyticklabels,
+    )
 
     # Remove colors from totals
     quadmesh = ax.findobj(QuadMesh)[0]
     facecolors = quadmesh.get_facecolors()
     # make colors of the last column white
-    facecolors[np.arange(cf.shape[0] - 1, cf.size, cf.shape[0])] = np.array([0, 0, 0, 0.05])
+    facecolors[np.arange(cf.shape[0] - 1, cf.size, cf.shape[0])] = np.array(
+        [0, 0, 0, 0.05]
+    )
     facecolors[np.arange(cf.size - cf.shape[0], cf.size)] = np.array([0, 0, 0, 0.05])
     quadmesh.set_facecolors = facecolors
 
     if xyplotlabels:
-        plt.ylabel('Observed values', fontsize=11)
-        plt.xlabel('Predicted values', fontsize=11)
+        plt.ylabel("Observed values", fontsize=11)
+        plt.xlabel("Predicted values", fontsize=11)
 
     if title:
         plt.title(title)
@@ -230,18 +279,28 @@ def plot_roc_curves(X, y, model, labels=None, output_path=None, savefig_kws=None
 
     fig, axs = plt.subplots(nrows, ncols, figsize=(4 * ncols, 3 * nrows))
     for i in range(len(classes)):
-        axs[i // ncols, i % ncols].plot(fpr[i], tpr[i], color='#11A579',
-                                        label='ROC curve (area = %0.4f)' % roc_auc[i])
-        axs[i // ncols, i % ncols].plot([0, 1], [0, 1], color='#7F3C8D', linestyle='--')
+        axs[i // ncols, i % ncols].plot(
+            fpr[i],
+            tpr[i],
+            color="#11A579",
+            label="ROC curve (area = %0.4f)" % roc_auc[i],
+        )
+        axs[i // ncols, i % ncols].plot([0, 1], [0, 1], color="#7F3C8D", linestyle="--")
         axs[i // ncols, i % ncols].set_xlim([-0.025, 1.025])
         axs[i // ncols, i % ncols].set_ylim([0.0, 1.05])
-        axs[i // ncols, i % ncols].set_title(f'Cluster {labels[i]}', fontsize=12, pad=10)
+        axs[i // ncols, i % ncols].set_title(
+            f"Cluster {labels[i]}", fontsize=12, pad=10
+        )
         axs[i // ncols, i % ncols].legend(loc="lower right")
 
         if i // ncols == nrows - 1:
-            axs[i // ncols, i % ncols].set_xlabel('False Positive Rate', fontsize=11, labelpad=10)
+            axs[i // ncols, i % ncols].set_xlabel(
+                "False Positive Rate", fontsize=11, labelpad=10
+            )
         if i % ncols == 0:
-            axs[i // ncols, i % ncols].set_ylabel('True Positive Rate', fontsize=11, labelpad=10)
+            axs[i // ncols, i % ncols].set_ylabel(
+                "True Positive Rate", fontsize=11, labelpad=10
+            )
 
     fig.tight_layout()
     savefig(output_path, savefig_kws)

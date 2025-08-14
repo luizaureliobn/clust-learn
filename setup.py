@@ -3,12 +3,12 @@ import os
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(ROOT, 'README.md')) as f:
+with open(os.path.join(ROOT, "README.md")) as f:
     README = f.read()
 
 
 setup(
-    name='clust-learn',
+    name="clust-learn",
     version="0.2.7",
     description="A Python package for explainable cluster analysis",
     long_description=README,
@@ -20,14 +20,14 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        'Topic :: Scientific/Engineering',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11'
+        "Topic :: Scientific/Engineering",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
-    license='GPLv3',
+    license="GPLv3",
     install_requires=[
-	    "imbalanced-learn>=0.10.0",
+        "imbalanced-learn>=0.10.0",
         "kneed>=0.7.0",
         "matplotlib>=3.4.3",
         "networkx>=2.6.3",
@@ -40,7 +40,7 @@ setup(
         "seaborn>=0.11.2",
         "shap>=0.40.0",
         "statsmodels>=0.13.2",
-        "xgboost>=1.5.2"
+        "xgboost>=1.5.2",
     ],
-    python_requires='>=3.9'
+    python_requires=">=3.9",
 )

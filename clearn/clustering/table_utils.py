@@ -4,7 +4,9 @@
 from .utils import *
 
 
-def compare_cluster_means_to_global_means(df, dimensions, weights=None, data_standardized=False, output_path=None):
+def compare_cluster_means_to_global_means(
+    df, dimensions, weights=None, data_standardized=False, output_path=None
+):
     """
     For every cluster and every variable in `dimensions`, the relative difference between the intra-cluster mean
     and the global mean is computed.
@@ -27,11 +29,16 @@ def compare_cluster_means_to_global_means(df, dimensions, weights=None, data_sta
     df_agg_diff : `pandas.DataFrame`
         DataFrame with the comparison.
     """
-    agg_method = 'mean'
+    agg_method = "mean"
     if weights is not None:
-        def wmean(x): return weighted_mean(x, weights[x.index])
+
+        def wmean(x):
+            return weighted_mean(x, weights[x.index])
+
         agg_method = wmean
-    df_agg = df.groupby('cluster').agg(dict(zip(list(dimensions), [agg_method] * len(dimensions))))
+    df_agg = df.groupby("cluster").agg(
+        dict(zip(list(dimensions), [agg_method] * len(dimensions)))
+    )
 
     df_agg_diff = df_agg.copy()
     if data_standardized:
@@ -39,7 +46,9 @@ def compare_cluster_means_to_global_means(df, dimensions, weights=None, data_sta
     else:
         mean_array = df[dimensions].apply(agg_method).values
         for idx, row in df_agg.iterrows():
-            df_agg_diff.loc[idx, dimensions] = (row[dimensions] - mean_array) / mean_array
+            df_agg_diff.loc[idx, dimensions] = (
+                row[dimensions] - mean_array
+            ) / mean_array
 
     df_agg_diff = df_agg_diff.reset_index()
     if output_path is not None:
