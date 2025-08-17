@@ -23,17 +23,21 @@ Os scripts `extract_cluster_info.py` e `generate_cluster_report.py` **NÃO são 
    - Inclui interpretação e insights
    - Análise de critérios de classificação
 
-### Scripts de Pipeline (Novos)
+### Scripts de Pipeline (Pasta additional_scripts/)
 
-4. **`pipeline_completo.py`** - Pipeline sequencial
+4. **`additional_scripts/pipeline_completo.py`** - Pipeline sequencial
    - Executa os 3 scripts individuais em sequência
    - Controle de erros e continuidade
    - Relatório de execução
 
-5. **`analise_completa_integrada.py`** - Análise integrada
+5. **`additional_scripts/analise_completa_integrada.py`** - Análise integrada
    - Todas as funcionalidades em um único script
    - Melhor performance (reutiliza dados processados)
    - Controle unificado do fluxo
+
+6. **`additional_scripts/alunos_clusters_explicaveis.py`** - Análise específica de clusters de alunos
+   - Script adicional para análise detalhada
+   - Foco em interpretabilidade dos clusters
 
 ## 🚀 Como Executar
 
@@ -60,10 +64,10 @@ python generate_cluster_report.py
 
 ```bash
 # Executa todos os scripts em sequência
-python pipeline_completo.py
+python additional_scripts/pipeline_completo.py
 
 # Ver ajuda
-python pipeline_completo.py --help
+python additional_scripts/pipeline_completo.py --help
 ```
 
 **Vantagens:**
@@ -80,7 +84,7 @@ python pipeline_completo.py --help
 
 ```bash
 # Executa análise completa integrada
-python analise_completa_integrada.py
+python additional_scripts/analise_completa_integrada.py
 ```
 
 **Vantagens:**
@@ -150,11 +154,13 @@ replication_materials/
 │   └── pisa_spain_sample_v2.csv
 ├── img/                          # Criado automaticamente
 ├── simulation/                   # Scripts de simulação
+├── additional_scripts/           # Scripts adicionais criados posteriormente
+│   ├── pipeline_completo.py     # Pipeline sequencial
+│   ├── analise_completa_integrada.py # Análise integrada
+│   └── alunos_clusters_explicaveis.py # Análise específica de clusters
 ├── paper_script.py              # Script original do artigo
 ├── extract_cluster_info.py      # Extração de informações
 ├── generate_cluster_report.py   # Geração de relatório
-├── pipeline_completo.py         # Pipeline sequencial
-├── analise_completa_integrada.py # Análise integrada
 └── README_PIPELINE.md           # Este arquivo
 ```
 
@@ -165,8 +171,8 @@ replication_materials/
 - Use scripts de simulação na pasta `simulation/`
 
 ### Para Execução de Produção
-- Use `analise_completa_integrada.py` (melhor performance)
-- Use `pipeline_completo.py` (se precisar de modularidade)
+- Use `additional_scripts/analise_completa_integrada.py` (melhor performance)
+- Use `additional_scripts/pipeline_completo.py` (se precisar de modularidade)
 
 ### Para Replicação do Artigo
 - Use `paper_script.py` seguido dos outros scripts conforme necessário
