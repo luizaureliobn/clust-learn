@@ -8,7 +8,6 @@ Este script verifica e instala as dependências necessárias para usar DiCE
 import subprocess
 import sys
 import importlib
-import os
 from pathlib import Path
 
 def check_python_version():
@@ -48,7 +47,7 @@ def install_package(package_name, import_name=None, version=None):
             install_cmd.append(package_name)
         
         try:
-            result = subprocess.run(install_cmd, capture_output=True, text=True, check=True)
+            subprocess.run(install_cmd, capture_output=True, text=True, check=True)
             print(f"✅ {package_name} instalado com sucesso")
             return True
         except subprocess.CalledProcessError as e:
