@@ -1,0 +1,62 @@
+================================================================================
+RELATÓRIO QUANTITATIVO - MUTABILIDADE DOS ATRIBUTOS
+================================================================================
+Data de geração: 18/08/2025 às 14:47:50
+
+1. ESTATÍSTICAS GERAIS
+----------------------------------------
+
+Dataset Alunos de Graduação:
+  • Total de atributos: 30
+  • Atributos imutáveis: 11 (36.7%)
+  • Atributos mutáveis: 19 (63.3%)
+
+Dataset PISA Espanha:
+  • Total de atributos: 80
+  • Atributos imutáveis: 7 (8.8%)
+  • Atributos mutáveis: 73 (91.2%)
+
+2. ANÁLISE POR CATEGORIAS DE INTERVENÇÃO
+--------------------------------------------------
+
+Pedagógicos:
+  • Número de atributos: 10 (19.6% do total de mutáveis)
+  • Atributos: ira, TEACHSUP, DIRINS, PERFEED, EMOSUPS...
+
+Psicossociais:
+  • Número de atributos: 10 (19.6% do total de mutáveis)
+  • Atributos: JOYREAD, RESILIENCE, GCSELFEFF, BELONG, PERCOMP...
+
+Socioeconômicos:
+  • Número de atributos: 9 (17.6% do total de mutáveis)
+  • Atributos: rendabruta, ESCS, WEALTH, HOMEPOS, CULTPOSS...
+
+Tecnológicos:
+  • Número de atributos: 8 (15.7% do total de mutáveis)
+  • Atributos: ICTHOME, ICTSCH, COMPICT, AUTICT, SOIAICT...
+
+Familiares:
+  • Número de atributos: 6 (11.8% do total de mutáveis)
+  • Atributos: mae_nivel_escolaridade, pai_nivel_escolaridade, companhia_domiciliar, estado_civil, qtd_filhos...
+
+Ambiente Escolar:
+  • Número de atributos: 4 (7.8% do total de mutáveis)
+  • Atributos: DISCLIMA, REPEAT, situacao, SCCHANGE
+
+Orientação/Informação:
+  • Número de atributos: 4 (7.8% do total de mutáveis)
+  • Atributos: INFOCAR, INFOJOB1, INFOJOB2, idioma
+
+3. INSIGHTS PRINCIPAIS
+------------------------------
+
+• O dataset PISA apresenta maior proporção de atributos mutáveis (90.7%)
+  comparado ao dataset de graduação (63.3%)
+
+• As categorias com maior número de atributos mutáveis são:
+  1. Pedagógicos: 10 atributos
+  2. Psicossociais: 10 atributos
+  3. Socioeconômicos: 9 atributos
+
+• Isso indica oportunidades significativas para intervenções
+  educacionais focadas em fatores pedagógicos e psicossociais
