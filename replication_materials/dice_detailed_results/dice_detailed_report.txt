@@ -1,0 +1,21 @@
+RELATÓRIO DETALHADO - ANÁLISE DICE
+==================================================
+
+Dataset: 3135 amostras
+Features analisadas: 10
+Clusters: [np.int32(0), np.int32(1), np.int32(2)]
+Transições analisadas: 0
+
+FEATURES UTILIZADAS:
+ 1. ESCS
+ 2. TEACHSUP
+ 3. JOYREAD
+ 4. PERCOMP
+ 5. BELONG
+ 6. RESILIENCE
+ 7. GCSELFEFF
+ 8. COMPICT
+ 9. HOMEPOS
+10. WEALTH
+
+TRANSIÇÕES ANALISADAS:
