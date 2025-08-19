@@ -1,8 +1,0 @@
-RELATÓRIO DE ANÁLISE DICE - CONTRAFACTUAIS
-==================================================
-
-Dataset analisado: 4256 amostras
-Features utilizadas: 77
-Clusters analisados: [np.int32(0), np.int32(1), np.int32(2)]
-Análises realizadas: 0
-

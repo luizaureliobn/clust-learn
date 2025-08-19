@@ -170,21 +170,25 @@ conda install -c conda-forge dice-ml
   - Verificar qualidade dos clusters
 
 ### Erro de Memória
+
 - **Causa**: Dataset muito grande
-- **Solução**: 
+- **Solução**:
   - Reduzir número de amostras
   - Usar menos variáveis
   - Processar clusters individualmente
 
 ## 📚 Referências
 
-1. **DiCE Paper**: Mothilal, R. K., Sharma, A., & Tan, C. (2020). Explaining machine learning classifiers through diverse counterfactual explanations.
-2. **DiCE Documentation**: https://github.com/interpretml/DiCE
-3. **Tutorial**: https://dice-ml.readthedocs.io/
+1. **DiCE Paper**: Mothilal, R. K., Sharma, A., & Tan, C. (2020).
+   Explaining machine learning classifiers through diverse counterfactual
+   explanations.
+2. **DiCE Documentation**: <https://github.com/interpretml/DiCE>
+3. **Tutorial**: <https://dice-ml.readthedocs.io/>
 
 ## 🤝 Contribuições
 
 Para melhorar estes scripts:
+
 1. Adicione novos métodos de geração de contrafactuais
 2. Implemente visualizações mais avançadas
 3. Crie análises estatísticas dos contrafactuais
@@ -192,4 +196,6 @@ Para melhorar estes scripts:
 
 ---
 
-**Nota**: Estes scripts são baseados no `paper_script.py` original e mantêm toda a funcionalidade existente, adicionando capacidades de explicabilidade com DICE.
+**Nota**: Estes scripts são baseados no `paper_script.py` original e mantêm
+toda a funcionalidade existente, adicionando capacidades de explicabilidade
+com DICE.

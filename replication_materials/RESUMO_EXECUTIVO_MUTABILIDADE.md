@@ -2,7 +2,9 @@
 
 ## 🎯 Objetivo
 
-Este documento apresenta os principais resultados da análise de mutabilidade dos atributos dos alunos nos datasets do projeto, fornecendo insights estratégicos para políticas educacionais baseadas em evidências.
+Este documento apresenta os principais resultados da análise de mutabilidade
+dos atributos dos alunos nos datasets do projeto, fornecendo insights
+estratégicos para políticas educacionais baseadas em evidências.
 
 ---
 
@@ -17,7 +19,9 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 | **TOTAL CONSOLIDADO** | 110 | 18 (16.4%) | 92 (83.6%) | **83.6%** |
 
 ### 🎯 Insight Principal
-> **83.6% dos atributos são mutáveis**, oferecendo amplas oportunidades para intervenções educacionais efetivas.
+
+> **83.6% dos atributos são mutáveis**, oferecendo amplas oportunidades
+para intervenções educacionais efetivas.
 
 ---
 
@@ -42,6 +46,7 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 ### 🔴 PRIORIDADE ALTA (Impacto Imediato)
 
 #### 1. **Fatores Pedagógicos** (10 atributos)
+
 - **Atributos-chave**: `TEACHSUP`, `DIRINS`, `PERFEED`, `ira`
 - **Ações recomendadas**:
   - Formação continuada de professores
@@ -51,6 +56,7 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 - **Investimento**: Médio
 
 #### 2. **Fatores Psicossociais** (10 atributos)
+
 - **Atributos-chave**: `RESILIENCE`, `BELONG`, `GCSELFEFF`, `JOYREAD`
 - **Ações recomendadas**:
   - Programas de desenvolvimento socioemocional
@@ -60,6 +66,7 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 - **Investimento**: Médio
 
 #### 3. **Fatores Tecnológicos** (8 atributos)
+
 - **Atributos-chave**: `COMPICT`, `ICTHOME`, `ICTSCH`
 - **Ações recomendadas**:
   - Programas de inclusão digital
@@ -69,6 +76,7 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 - **Investimento**: Alto
 
 #### 4. **Ambiente Escolar** (4 atributos)
+
 - **Atributos-chave**: `DISCLIMA`, `BEINGBULLIED`
 - **Ações recomendadas**:
   - Programas anti-bullying
@@ -80,6 +88,7 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 ### 🟡 PRIORIDADE MÉDIA (Impacto de Longo Prazo)
 
 #### 5. **Fatores Socioeconômicos** (9 atributos)
+
 - **Atributos-chave**: `ESCS`, `WEALTH`, `rendabruta`
 - **Ações recomendadas**:
   - Programas de assistência estudantil
@@ -89,6 +98,7 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 - **Investimento**: Alto
 
 #### 6. **Fatores Familiares** (6 atributos)
+
 - **Atributos-chave**: `mae_nivel_escolaridade`, `pai_nivel_escolaridade`
 - **Ações recomendadas**:
   - Programas de educação parental
@@ -104,8 +114,10 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 ### ✅ Oportunidades Identificadas
 
 1. **Alta Mutabilidade**: 83.6% dos atributos podem ser influenciados por intervenções
-2. **Foco Pedagógico**: 39.2% dos atributos mutáveis estão relacionados a fatores pedagógicos e psicossociais
-3. **Impacto Tecnológico**: 15.7% dos atributos estão relacionados à competência digital
+2. **Foco Pedagógico**: 39.2% dos atributos mutáveis estão relacionados a
+fatores pedagógicos e psicossociais
+3. **Impacto Tecnológico**: 15.7% dos atributos estão relacionados à
+competência digital
 4. **Ambiente Positivo**: Fatores de clima escolar são altamente mutáveis
 
 ### ⚠️ Desafios Identificados
@@ -130,16 +142,19 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 ### 📊 Indicadores de Monitoramento
 
 #### Curto Prazo (6-12 meses)
+
 - Melhoria no `TEACHSUP` (suporte docente)
 - Redução do `BEINGBULLIED` (bullying)
 - Aumento do `COMPICT` (competência digital)
 
 #### Médio Prazo (12-24 meses)
+
 - Melhoria no `RESILIENCE` (resiliência)
 - Aumento do `BELONG` (pertencimento)
 - Melhoria no `ira` (rendimento acadêmico)
 
 #### Longo Prazo (24+ meses)
+
 - Melhoria no `ESCS` (status socioeconômico)
 - Aumento da escolaridade parental
 - Redução da evasão (`situacao`)
@@ -175,6 +190,7 @@ Este documento apresenta os principais resultados da análise de mutabilidade do
 ---
 
 **Data de geração**: 18/08/2025  
-**Datasets analisados**: alunos_graduacao.csv (9.900 registros) + pisa_spain_sample_v2.csv (5.001 registros)  
+**Datasets analisados**: alunos_graduacao.csv (9.900 registros) +
+pisa_spain_sample_v2.csv (5.001 registros)  
 **Total de atributos analisados**: 110 atributos únicos  
 **Metodologia**: Classificação baseada em literatura educacional e análise de mutabilidade
