@@ -1,3 +1,4 @@
+dice-ml>=0.12
 imbalanced-learn>=0.10.0
 kneed>=0.7.0
 matplotlib>=3.4.3

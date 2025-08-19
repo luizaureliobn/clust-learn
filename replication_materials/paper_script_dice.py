@@ -207,6 +207,9 @@ if DICE_AVAILABLE:
         dice_data = df_[dice_features + ['cluster']].copy()
         dice_data = dice_data.dropna()
         
+        # FIX: Garantir que a coluna do cluster seja do tipo string para compatibilidade com DICE
+        dice_data['cluster'] = dice_data['cluster'].astype(str)
+        
         print(f"Dataset para DICE: {dice_data.shape[0]} amostras, {len(dice_features)} features")
         print(f"Clusters únicos: {sorted(dice_data['cluster'].unique())}")
         
@@ -235,79 +238,149 @@ if DICE_AVAILABLE:
         
         dice_explainer = Dice(dice_data_interface, dice_model, method='random')
         
-        # Gerar contrafactuais para amostras de diferentes clusters
-        clusters_to_analyze = sorted(dice_data['cluster'].unique())[:3]  # Analisar primeiros 3 clusters
+        # Abordagem funcional para DICE - Análise binária
+        print("\n--- Gerando Contrafactuais com DICE (Análise Binária) ---")
         
+        # Criar análises binárias entre pares de clusters para contornar limitações do DICE
+        clusters_to_analyze = sorted(dice_data['cluster'].unique())
+        successful_analyses = 0
         counterfactuals_results = {}
         
-        for target_cluster in clusters_to_analyze:
-            print(f"\n--- Análise de Contrafactuais para Cluster {target_cluster} ---")
-            
-            # Selecionar amostras do cluster atual
-            cluster_samples = dice_data[dice_data['cluster'] == target_cluster]
-            
-            if len(cluster_samples) > 0:
-                # Selecionar uma amostra representativa
-                sample_idx = cluster_samples.index[len(cluster_samples)//2]  # Amostra do meio
-                query_instance = dice_data.loc[[sample_idx], dice_features]
+        # Analisar pares de clusters (0 vs 1, 0 vs 2, 1 vs 2)
+        cluster_pairs = [(clusters_to_analyze[0], clusters_to_analyze[1]),
+                        (clusters_to_analyze[0], clusters_to_analyze[2]),
+                        (clusters_to_analyze[1], clusters_to_analyze[2])]
+        
+        for cluster_a, cluster_b in cluster_pairs:
+            try:
+                print(f"\n--- Análise Binária: Cluster {cluster_a} vs Cluster {cluster_b} ---")
                 
-                print(f"Amostra original (Cluster {target_cluster}):")
-                print(query_instance.iloc[0].to_dict())
+                # Criar dataset binário
+                binary_data = dice_data[dice_data['cluster'].isin([cluster_a, cluster_b])].copy()
+                binary_data['binary_target'] = (binary_data['cluster'] == cluster_b).astype(int)
                 
-                # Gerar contrafactuais para outros clusters
-                other_clusters = [c for c in clusters_to_analyze if c != target_cluster]
+                if len(binary_data) < 10:
+                    print(f"✗ Dados insuficientes para análise {cluster_a} vs {cluster_b}")
+                    continue
                 
-                for desired_cluster in other_clusters:
-                    try:
-                        print(f"\nGerando contrafactuais para mudar de Cluster {target_cluster} para Cluster {desired_cluster}...")
-                        
-                        counterfactuals = dice_explainer.generate_counterfactuals(
-                            query_instance,
-                            total_CFs=3,
-                            desired_class=desired_cluster
-                        )
-                        
-                        # Salvar resultados
-                        cf_key = f"cluster_{target_cluster}_to_{desired_cluster}"
-                        counterfactuals_results[cf_key] = counterfactuals
-                        
-                        # Mostrar contrafactuais
+                # Treinar modelo binário
+                X_binary = binary_data[dice_features]
+                y_binary = binary_data['binary_target']
+                
+                X_train_bin, X_test_bin, y_train_bin, y_test_bin = train_test_split(
+                    X_binary, y_binary, test_size=0.3, random_state=42, stratify=y_binary
+                )
+                
+                rf_binary = RandomForestClassifier(n_estimators=50, random_state=42)
+                rf_binary.fit(X_train_bin, y_train_bin)
+                
+                print(f"Acurácia modelo binário: {rf_binary.score(X_test_bin, y_test_bin):.3f}")
+                
+                # Configurar DICE para problema binário
+                dice_data_binary = binary_data[dice_features + ['binary_target']].copy()
+                
+                dice_interface_binary = dice_ml.Data(
+                    dataframe=dice_data_binary,
+                    continuous_features=dice_features,
+                    outcome_name='binary_target'
+                )
+                
+                dice_model_binary = dice_ml.Model(
+                    model=rf_binary,
+                    backend='sklearn'
+                )
+                
+                dice_explainer_binary = Dice(dice_interface_binary, dice_model_binary, method='random')
+                
+                # Selecionar amostras para análise
+                cluster_a_samples = binary_data[binary_data['cluster'] == cluster_a]
+                if len(cluster_a_samples) > 0:
+                    sample_idx = cluster_a_samples.index[0]
+                    query_instance = dice_data_binary.loc[[sample_idx], dice_features]
+                    
+                    print(f"Gerando contrafactuais para mudar de Cluster {cluster_a} para Cluster {cluster_b}...")
+                    
+                    # Gerar contrafactuais
+                    counterfactuals = dice_explainer_binary.generate_counterfactuals(
+                        query_instance,
+                        total_CFs=3,
+                        desired_class=1  # Classe de destino (cluster_b)
+                    )
+                    
+                    # Verificar resultados
+                    if counterfactuals.cf_examples_list and len(counterfactuals.cf_examples_list) > 0:
                         cf_df = counterfactuals.cf_examples_list[0].final_cfs_df
-                        print(f"Contrafactuais gerados: {len(cf_df)}")
                         
                         if len(cf_df) > 0:
-                            print("Primeiro contrafactual:")
-                            print(cf_df.iloc[0][dice_features].to_dict())
+                            print(f"✓ Contrafactuais gerados: {len(cf_df)}")
                             
-                            # Calcular diferenças
+                            # Salvar contrafactuais
+                            cf_filename = os.path.join(dice_results_dir, f"counterfactuals_{cluster_a}_to_{cluster_b}.csv")
+                            cf_df.to_csv(cf_filename, index=False)
+                            
+                            # Analisar mudanças
                             original_values = query_instance.iloc[0]
                             cf_values = cf_df.iloc[0][dice_features]
                             differences = cf_values - original_values
                             
-                            print("\nPrincipais mudanças necessárias:")
+                            # Mostrar principais mudanças
                             significant_changes = differences[abs(differences) > 0.1].sort_values(key=abs, ascending=False)
-                            for feature, change in significant_changes.head(5).items():
-                                print(f"  {feature}: {change:+.3f}")
+                            if len(significant_changes) > 0:
+                                print("Principais mudanças necessárias:")
+                                for feature, change in significant_changes.head(5).items():
+                                    print(f"  {feature}: {change:+.3f}")
                             
-                            # Salvar contrafactuais em CSV
-                            cf_filename = os.path.join(dice_results_dir, f"counterfactuals_{cf_key}.csv")
-                            cf_df.to_csv(cf_filename, index=False)
+                            counterfactuals_results[f"{cluster_a}_to_{cluster_b}"] = {
+                                'counterfactuals': counterfactuals,
+                                'changes': significant_changes.head(10).to_dict()
+                            }
+                            successful_analyses += 1
+                            
                             print(f"Contrafactuais salvos em: {cf_filename}")
+                        else:
+                            print(f"✗ Nenhum contrafactual gerado para {cluster_a} -> {cluster_b}")
+                    else:
+                        print(f"✗ Falha ao gerar contrafactuais para {cluster_a} -> {cluster_b}")
                         
-                    except Exception as e:
-                        print(f"Erro ao gerar contrafactuais para Cluster {desired_cluster}: {str(e)}")
+            except Exception as e:
+                print(f"✗ Erro na análise {cluster_a} vs {cluster_b}: {str(e)}")
         
-        # Análise agregada dos contrafactuais
-        print("\n--- ANÁLISE AGREGADA DOS CONTRAFACTUAIS ---")
+        print(f"\n--- RESUMO DA ANÁLISE DICE ---")
+        print(f"Análises binárias realizadas: {len(cluster_pairs)}")
+        print(f"Análises bem-sucedidas: {successful_analyses}")
         
-        all_changes = []
-        for cf_key, counterfactuals in counterfactuals_results.items():
-            if counterfactuals.cf_examples_list and len(counterfactuals.cf_examples_list[0].final_cfs_df) > 0:
-                cf_df = counterfactuals.cf_examples_list[0].final_cfs_df
-                # Aqui você pode adicionar análises mais detalhadas
-                all_changes.append(cf_key)
+        # Criar visualização dos contrafactuais se houver resultados
+        if successful_analyses > 0:
+            print("\n--- Criando Visualização dos Contrafactuais ---")
+            
+            # Criar gráfico de importância das mudanças
+            all_changes = {}
+            for analysis_key, result in counterfactuals_results.items():
+                for feature, change in result['changes'].items():
+                    if feature not in all_changes:
+                        all_changes[feature] = []
+                    all_changes[feature].append(abs(change))
+            
+            # Calcular importância média das features
+            feature_importance = {}
+            for feature, changes in all_changes.items():
+                feature_importance[feature] = np.mean(changes)
+            
+            # Salvar análise de importância
+            importance_df = pd.DataFrame(list(feature_importance.items()), 
+                                       columns=['Feature', 'Avg_Change_Magnitude'])
+            importance_df = importance_df.sort_values('Avg_Change_Magnitude', ascending=False)
+            
+            importance_file = os.path.join(dice_results_dir, "feature_importance_counterfactuals.csv")
+            importance_df.to_csv(importance_file, index=False)
+            print(f"Análise de importância salva em: {importance_file}")
+            
+            # Mostrar top 10 features mais importantes
+            print("\nTop 10 features mais importantes para mudanças de cluster:")
+            for idx, row in importance_df.head(10).iterrows():
+                print(f"  {row['Feature']}: {row['Avg_Change_Magnitude']:.3f}")
         
-        print(f"Total de análises de contrafactuais realizadas: {len(all_changes)}")
+        all_changes = list(counterfactuals_results.keys())
         
         # Criar relatório resumido
         report_path = os.path.join(dice_results_dir, "dice_analysis_report.txt")
